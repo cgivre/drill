@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,6 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -61,6 +60,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import static org.apache.drill.common.expression.SchemaPath.STAR_COLUMN;
 
 public class SolrRecordReader extends AbstractRecordReader {
   static final Logger logger = LoggerFactory.getLogger(SolrRecordReader.class);
@@ -154,7 +155,7 @@ public class SolrRecordReader extends AbstractRecordReader {
       for (String fieldName : schemaFieldMap.keySet()) {
         this.fields.add(fieldName);
       }
-      transformed.add(AbstractRecordReader.STAR_COLUMN);
+      transformed.add(STAR_COLUMN);
     }
     return transformed;
   }

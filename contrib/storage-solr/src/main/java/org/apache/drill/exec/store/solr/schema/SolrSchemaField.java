@@ -1,6 +1,6 @@
-/**
- * Licensed to the Apache Software Foundation import java.util.List;
-ore contributor license agreements.  See the NOTICE file
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
@@ -15,6 +15,7 @@ ore contributor license agreements.  See the NOTICE file
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr.schema;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

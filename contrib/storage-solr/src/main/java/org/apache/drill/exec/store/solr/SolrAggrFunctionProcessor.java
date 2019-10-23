@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.solr;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -26,7 +27,9 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
@@ -267,6 +270,11 @@ public class SolrAggrFunctionProcessor implements
   }
 
   @Override
+  public Boolean visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, LogicalExpression value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
   public Boolean visitDoubleConstant(DoubleExpression dExpr,
       LogicalExpression value) throws RuntimeException {
     // TODO Auto-generated method stub
@@ -321,6 +329,21 @@ public class SolrAggrFunctionProcessor implements
     logger.debug("SolrAggrFunctionProcessor :: visitConvertExpression ");
 
     return false;
+  }
+
+  @Override
+  public Boolean visitParameter(ValueExpressions.ParameterExpression e, LogicalExpression value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Boolean visitTypedFieldExpr(TypedFieldExpr e, LogicalExpression value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Boolean visitAnyValueExpression(AnyValueExpression e, LogicalExpression value) throws RuntimeException {
+    return null;
   }
 
   private static final ImmutableSet<Class<? extends LogicalExpression>> VALUE_EXPRESSION_CLASSES;

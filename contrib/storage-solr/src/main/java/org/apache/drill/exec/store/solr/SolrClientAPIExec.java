@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,21 +36,18 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.impl.XMLResponseParser;
+import org.apache.solr.client.solrj.impl.HttpSolrClient.Builder;
 import org.apache.solr.client.solrj.io.stream.SolrStream;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
-import org.apache.solr.common.params.GroupParams;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -131,7 +128,7 @@ public class SolrClientAPIExec {
       String uniqueKey, List<String> fields, Integer solrDocFectCount,
       StringBuilder filters, List<SolrAggrParam> solrAggrParams, boolean isGroup) {
     //solrCoreName = solrCoreName.replaceAll("`", "");
-    SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
+    SolrClient solrClient = new Builder().withBaseSolrUrl(solrServer + solrCoreName).build();
     String fieldStr = null;
     String[] fieldListArr = null;
     List<String> statsFieldList = Lists.newArrayList();
@@ -203,7 +200,7 @@ public class SolrClientAPIExec {
       StringBuilder filters) {
 
     solrCoreName = solrCoreName.replaceAll("`", "");
-    SolrClient solrClient = new HttpSolrClient(solrServer + solrCoreName);
+    SolrClient solrClient = new Builder().withBaseSolrUrl(solrServer + solrCoreName).build();
 
     SolrQuery solrQuery = new SolrQuery().setTermsRegexFlag("case_insensitive")
         .setQuery(uniqueKey + ":*").setRows(0);

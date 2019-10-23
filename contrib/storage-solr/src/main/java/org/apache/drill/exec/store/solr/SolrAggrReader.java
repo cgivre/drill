@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,6 +46,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import static org.apache.drill.common.expression.SchemaPath.STAR_COLUMN;
 
 public class SolrAggrReader extends AbstractRecordReader {
   static final Logger logger = LoggerFactory.getLogger(SolrAggrReader.class);
@@ -133,7 +135,7 @@ public class SolrAggrReader extends AbstractRecordReader {
       for (String fieldName : schemaFieldMap.keySet()) {
         this.fields.add(fieldName);
       }
-      transformed.add(AbstractRecordReader.STAR_COLUMN);
+      transformed.add(STAR_COLUMN);
     }
     return transformed;
   }

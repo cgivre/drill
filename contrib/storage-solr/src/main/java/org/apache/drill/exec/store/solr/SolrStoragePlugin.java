@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,18 +32,16 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaFactory;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.SystemDefaultHttpClient;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
+import org.slf4j.Logger;
 
 public class SolrStoragePlugin extends AbstractStoragePlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
+  static final Logger logger = org.slf4j.LoggerFactory
       .getLogger(SolrStoragePlugin.class);
 
   private final SolrStoragePluginConfig solrStorageConfig;
@@ -57,7 +55,9 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
     logger.debug("initializing solr storage plugin....");
     this.context = context;
     this.solrStorageConfig = solrStoragePluginConfig;
-    this.solrClient = new HttpSolrClient(solrStorageConfig.getSolrServer());
+    solrClient = new HttpSolrClient.Builder()
+      .withBaseSolrUrl(solrStorageConfig.getSolrServer())
+      .build();
     solrClientApiExec = new SolrClientAPIExec(solrClient);
     this.schemaFactory = new SolrSchemaFactory(this, name);
   }
@@ -114,7 +114,8 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
      * SolrQueryFilterRule.FILTER_ON_SCAN,
      * SolrQueryFilterRule.FILTER_ON_PROJECT,
      
-     SolrQueryFilterRule.FILTER_ON_PROJECT,*/SolrQueryFilterRule.AGG_PUSH_DOWN,SolrQueryLimitRule.LIMIT_ON_SCAN,
-        SolrQueryLimitRule.LIMIT_ON_PROJECT);
+     SolrQueryFilterRule.FILTER_ON_PROJECT,*/
+      SolrQueryFilterRule.AGG_PUSH_DOWN,
+      SolrQueryLimitRule.LIMIT_ON_SCAN, SolrQueryLimitRule.LIMIT_ON_PROJECT);
   }
 }
