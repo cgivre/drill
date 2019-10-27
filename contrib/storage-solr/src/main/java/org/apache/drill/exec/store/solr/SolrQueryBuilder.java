@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import java.text.MessageFormat;
@@ -29,20 +30,21 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
-public class SolrQueryBuilder extends
-    AbstractExprVisitor<SolrScanSpec, Void, RuntimeException> {
+public class SolrQueryBuilder extends AbstractExprVisitor<SolrScanSpec, Void, RuntimeException> {
   static final Logger logger = LoggerFactory.getLogger(SolrQueryBuilder.class);
+
   final SolrGroupScan groupScan;
+
   final LogicalExpression le;
+
   private boolean allExpressionsConverted = true;
 
-  public SolrQueryBuilder(SolrGroupScan solrGroupScan,
-      LogicalExpression conditionExp) {
-    this.groupScan = solrGroupScan;
-    this.le = conditionExp;
+  public SolrQueryBuilder(SolrGroupScan solrGroupScan, LogicalExpression conditionExp) {
+    groupScan = solrGroupScan;
+    le = conditionExp;
     logger.debug("SolrQueryBuilder :: constructor");
   }
 
@@ -50,44 +52,40 @@ public class SolrQueryBuilder extends
     logger.debug("SolrQueryBuilder :: parseTree");
     SolrScanSpec parsedSpec = le.accept(this, null);
     if (parsedSpec != null) {
-      parsedSpec = mergeScanSpecs("booleanAnd",
-          this.groupScan.getSolrScanSpec(), parsedSpec);
+      parsedSpec = mergeScanSpecs("booleanAnd", groupScan.getSolrScanSpec(), parsedSpec);
     }
     return parsedSpec;
   }
 
-  public SolrScanSpec mergeScanSpecs(String functionName,
-      SolrScanSpec leftScanSpec, SolrScanSpec rightScanSpec) {
+  public SolrScanSpec mergeScanSpecs(String functionName, SolrScanSpec leftScanSpec, SolrScanSpec rightScanSpec) {
     SolrFilterParam solrFilter = new SolrFilterParam();
     logger.info("mergeScanSpecs : init");
     switch (functionName) {
-    case "booleanAnd":
-      if (leftScanSpec.getFilter() != null && rightScanSpec.getFilter() != null) {
-        solrFilter.add(Joiner.on("").join(leftScanSpec.getFilter()));
-        solrFilter.add(" AND ");
-        solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
+      case "booleanAnd":
+        if (leftScanSpec.getFilter() != null && rightScanSpec.getFilter() != null) {
+          solrFilter.add(Joiner.on("").join(leftScanSpec.getFilter()));
+          solrFilter.add(" AND ");
+          solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
 
-      } else if (leftScanSpec.getFilter() != null) {
-        solrFilter = leftScanSpec.getFilter();
-      } else {
-        solrFilter = rightScanSpec.getFilter();
-      }
-      break;
-    case "booleanOr":
-      solrFilter.add(Joiner.on("").join(leftScanSpec.getFilter()));
-      solrFilter.add(" OR ");
-      solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
+        } else if (leftScanSpec.getFilter() != null) {
+          solrFilter = leftScanSpec.getFilter();
+        } else {
+          solrFilter = rightScanSpec.getFilter();
+        }
+        break;
+      case "booleanOr":
+        solrFilter.add(Joiner.on("").join(leftScanSpec.getFilter()));
+        solrFilter.add(" OR ");
+        solrFilter.add(Joiner.on("").join(rightScanSpec.getFilter()));
     }
-    SolrScanSpec solrScanSpec = new SolrScanSpec(groupScan.getSolrScanSpec()
-        .getSolrCoreName(), solrFilter);
+    SolrScanSpec solrScanSpec = new SolrScanSpec(groupScan.getSolrScanSpec().getSolrCoreName(), solrFilter);
     solrScanSpec.setCvSchema(this.groupScan.getSolrScanSpec().getCvSchema());
 
     return solrScanSpec;
   }
 
   @Override
-  public SolrScanSpec visitUnknown(LogicalExpression e, Void valueArg)
-      throws RuntimeException {
+  public SolrScanSpec visitUnknown(LogicalExpression e, Void valueArg) throws RuntimeException {
     logger.info("SolrQueryBuilder :: visitUnknown");
     allExpressionsConverted = false;
     return null;
@@ -98,8 +96,7 @@ public class SolrQueryBuilder extends
   }
 
   @Override
-  public SolrScanSpec visitFunctionHolderExpression(
-      FunctionHolderExpression fhe, Void valueArg) {
+  public SolrScanSpec visitFunctionHolderExpression(FunctionHolderExpression fhe, Void valueArg) {
     logger.info("SolrQueryBuilder :: visitFunctionHolderExpression");
 
     return null;
@@ -116,28 +113,27 @@ public class SolrQueryBuilder extends
     for (int i = 0; i < args.size(); ++i) {
       logger.info(" args " + args.get(i));
       switch (functionName) {
-      case "booleanAnd":
-      case "booleanOr":
-        if (nodeScanSpec == null) {
-          nodeScanSpec = args.get(i).accept(this, valueArg);
-        } else {
-          SolrScanSpec scanSpec = args.get(i).accept(this, valueArg);
-          if (scanSpec != null) {
-            nodeScanSpec = mergeScanSpecs(functionName, nodeScanSpec, scanSpec);
+        case "booleanAnd":
+        case "booleanOr":
+          if (nodeScanSpec == null) {
+            nodeScanSpec = args.get(i).accept(this, valueArg);
           } else {
-            allExpressionsConverted = false;
+            SolrScanSpec scanSpec = args.get(i).accept(this, valueArg);
+            if (scanSpec != null) {
+              nodeScanSpec = mergeScanSpecs(functionName, nodeScanSpec, scanSpec);
+            } else {
+              allExpressionsConverted = false;
+            }
           }
-        }
-        logger.info(" expression converted!");
-        break;
+          logger.info(" expression converted!");
+          break;
       }
     }
     return nodeScanSpec;
   }
 
   @Override
-  public SolrScanSpec visitFunctionCall(FunctionCall call, Void valueArg)
-      throws RuntimeException {
+  public SolrScanSpec visitFunctionCall(FunctionCall call, Void valueArg) throws RuntimeException {
     logger.debug("SolrQueryBuilder :: visitFunctionCall");
     SolrScanSpec nodeScanSpec = null;
     String functionName = call.getName();
@@ -148,12 +144,10 @@ public class SolrQueryBuilder extends
       valueVal = call.args.get(1);
     }
     if (SolrCompareFunctionProcessor.isCompareFunction(functionName)) {
-      SolrCompareFunctionProcessor evaluator = SolrCompareFunctionProcessor
-          .process(call);
+      SolrCompareFunctionProcessor evaluator = SolrCompareFunctionProcessor.process(call);
       if (evaluator.isSuccess()) {
         try {
-          nodeScanSpec = createSolrScanSpec(evaluator.getFunctionName(),
-              evaluator.getPath(), evaluator.getValue());
+          nodeScanSpec = createSolrScanSpec(evaluator.getFunctionName(), evaluator.getPath(), evaluator.getValue());
 
         } catch (Exception e) {
           logger.debug("Failed to create filters ", e);
@@ -161,20 +155,19 @@ public class SolrQueryBuilder extends
       }
     } else {
       switch (functionName) {
-      case "booleanAnd":
-      case "booleanOr":
-        SolrScanSpec leftScanSpec = args.get(0).accept(this, null);
-        SolrScanSpec rightScanSpec = args.get(1).accept(this, null);
-        if (leftScanSpec != null && rightScanSpec != null) {
-          nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec,
-              rightScanSpec);
-        } else {
-          allExpressionsConverted = false;
-          if ("booleanAnd".equals(functionName)) {
-            nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+        case "booleanAnd":
+        case "booleanOr":
+          SolrScanSpec leftScanSpec = args.get(0).accept(this, null);
+          SolrScanSpec rightScanSpec = args.get(1).accept(this, null);
+          if (leftScanSpec != null && rightScanSpec != null) {
+            nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec, rightScanSpec);
+          } else {
+            allExpressionsConverted = false;
+            if ("booleanAnd".equals(functionName)) {
+              nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+            }
           }
-        }
-        break;
+          break;
       }
     }
 
@@ -185,52 +178,47 @@ public class SolrQueryBuilder extends
 
   }
 
-  public SolrScanSpec createSolrScanSpec(String functionName, SchemaPath field,
-      Object fieldValue) {
+  public SolrScanSpec createSolrScanSpec(String functionName, SchemaPath field, Object fieldValue) {
     // extract the field name
-    String fieldName = field.getAsUnescapedPath();
+    String fieldName = field.getRootSegmentPath();
 
     String operator = null;
     switch (functionName) {
-    case "equal":
-      operator = ":{0}";
-      break;
-    case "not_equal":
-      break;
-    case "greater_than_or_equal_to":
-      operator = "[{0} TO *]";
-      break;
-    case "greater_than":
+      case "equal":
+        operator = ":{0}";
+        break;
+      case "not_equal":
+        break;
+      case "greater_than_or_equal_to":
+        operator = "[{0} TO *]";
+        break;
+      case "greater_than":
 
-    case "less_than_or_equal_to":
+      case "less_than_or_equal_to":
 
-    case "less_than":
+      case "less_than":
 
-    case "isnull":
-    case "isNull":
-    case "is null":
+      case "isnull":
+      case "isNull":
+      case "is null":
 
-    case "isnotnull":
-    case "isNotNull":
-    case "is not null":
-    default:
-      allExpressionsConverted = false;
-      break;
+      case "isnotnull":
+      case "isNotNull":
+      case "is not null":
+      default:
+        allExpressionsConverted = false;
+        break;
     }
     if (operator != null) {
       fieldValue = MessageFormat.format(operator, fieldValue.toString());
-      SolrFilterParam filterParam = new SolrFilterParam(fieldName,
-          fieldValue.toString());
+      SolrFilterParam filterParam = new SolrFilterParam(fieldName, fieldValue.toString());
 
-      SolrScanSpec solrScanSpec = new SolrScanSpec(this.groupScan
-          .getSolrScanSpec().getSolrCoreName(), filterParam);
+      SolrScanSpec solrScanSpec = new SolrScanSpec(this.groupScan.getSolrScanSpec().getSolrCoreName(), filterParam);
       solrScanSpec.setCvSchema(this.groupScan.getSolrScanSpec().getCvSchema());
       return solrScanSpec;
     }
-    logger.debug("createSolrScanSpec :: fieldName " + fieldName
-        + " :: functionName " + functionName);
-    SolrScanSpec solrScanSpec = new SolrScanSpec(this.groupScan
-        .getSolrScanSpec().getSolrCoreName());
+    logger.debug("createSolrScanSpec :: fieldName " + fieldName + " :: functionName " + functionName);
+    SolrScanSpec solrScanSpec = new SolrScanSpec(this.groupScan.getSolrScanSpec().getSolrCoreName());
     solrScanSpec.setCvSchema(this.groupScan.getSolrScanSpec().getCvSchema());
     return solrScanSpec;
   }

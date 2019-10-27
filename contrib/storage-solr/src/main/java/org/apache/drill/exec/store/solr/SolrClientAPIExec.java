@@ -53,10 +53,13 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import org.apache.solr.common.params.SolrParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SolrClientAPIExec {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(SolrClientAPIExec.class);
+  static final Logger logger = LoggerFactory.getLogger(SolrClientAPIExec.class);
+
   private SolrClient solrClient;
 
   public SolrClient getSolrClient() {
@@ -252,7 +255,7 @@ public class SolrClientAPIExec {
     logger.info("sending request to solr server " + solrServer + " on core "
         + solrCoreName);
     solrServer = solrServer + solrCoreName;
-    SolrStream solrStream = new SolrStream(solrServer, solrParams);
+    SolrStream solrStream = new SolrStream(solrServer, (SolrParams) solrParams);
 
     return solrStream;
 

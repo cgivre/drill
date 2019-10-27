@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr.schema;
 
 import java.util.ArrayList;
@@ -153,5 +154,4 @@ public class SolrSchemaPojo {
     String DEFAULT_SEARCH_FIELD = "defaultSearchField";
     String ERROR_OBJ = "errorObj";
   }
-
 }

@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
+import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -26,7 +28,9 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
@@ -45,8 +49,8 @@ import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 public class SolrCompareFunctionProcessor implements
     ExprVisitor<Boolean, LogicalExpression, RuntimeException> {
@@ -156,7 +160,7 @@ public class SolrCompareFunctionProcessor implements
           this.value = ((FloatExpression) valueArg).getFloat();
         }
         break;
-      case "DOUBLE":
+      case "DOUBLE":  // TODO Add VARDECIMAL type
         if (valueArg instanceof DoubleExpression && isEqualityFn) {
           this.value = ((DoubleExpression) valueArg).getDouble();
         }
@@ -189,6 +193,21 @@ public class SolrCompareFunctionProcessor implements
       }
     }
     return false;
+  }
+
+  @Override
+  public Boolean visitParameter(ValueExpressions.ParameterExpression e, LogicalExpression value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Boolean visitTypedFieldExpr(TypedFieldExpr e, LogicalExpression value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Boolean visitAnyValueExpression(AnyValueExpression e, LogicalExpression value) throws RuntimeException {
+    return null;
   }
 
   @Override
@@ -361,6 +380,12 @@ public class SolrCompareFunctionProcessor implements
   @Override
   public Boolean visitDecimal38Constant(Decimal38Expression decExpr,
       LogicalExpression value) throws RuntimeException {
+    return false;
+  }
+
+  @Override
+  public Boolean visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr,
+                                         LogicalExpression value) throws RuntimeException {
     return false;
   }
 

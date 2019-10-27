@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import org.apache.drill.common.expression.BooleanOperator;
@@ -28,9 +29,9 @@ import org.slf4j.LoggerFactory;
 public class SolrAggrQueryBuilder extends
     AbstractExprVisitor<SolrAggrParam, Void, RuntimeException> {
 
-  static final Logger logger = LoggerFactory.getLogger(SolrQueryBuilder.class);
-  final SolrGroupScan groupScan;
-  final LogicalExpression le;
+  private static final Logger logger = LoggerFactory.getLogger(SolrQueryBuilder.class);
+  private final SolrGroupScan groupScan;
+  private final LogicalExpression le;
   private boolean allExpressionsConverted = true;
 
   public SolrAggrQueryBuilder(SolrGroupScan solrGroupScan,
@@ -83,8 +84,7 @@ public class SolrAggrQueryBuilder extends
     logger.debug("SolrQueryBuilder :: visitFunctionCall"+" evaluator isSuccess : "+evaluator.isSuccess()+ " func "+evaluator.getFunctionName() + " path "+evaluator.getPath());
     if (evaluator.isSuccess() && evaluator.getPath() != null) {
       SolrAggrParam solrAggrParam = new SolrAggrParam();
-      solrAggrParam.setFieldName(evaluator.getPath().toString()
-          .replaceAll("`", ""));
+      solrAggrParam.setFieldName(evaluator.getPath().toString().replaceAll("`", ""));
       solrAggrParam.setFunctionName(evaluator.getFunctionName());
       // List<SolrAggrParam> aggrParams = this.groupScan.getSolrScanSpec()
       // .getAggrParams() != null ? this.groupScan.getSolrScanSpec()

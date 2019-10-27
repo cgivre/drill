@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import java.util.List;
@@ -27,6 +28,7 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
@@ -82,8 +84,7 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
       final TableScan scan = (TableScan) call.rel(1);
 
       try {
-        ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(),
-            proj.getProjects());
+        DrillRelOptUtil.ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
         if (columnInfo == null || columnInfo.isStarQuery() //
             || !scan.getTable().unwrap(DrillTable.class) //
                 .getGroupScan().canPushdownProjects(columnInfo.columns)) {
@@ -245,5 +246,4 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
           ImmutableList.of((RelNode) inputRel)));
     }
   }
-
 }

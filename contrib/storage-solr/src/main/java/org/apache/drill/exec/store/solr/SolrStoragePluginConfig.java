@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -22,28 +23,29 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonTypeName(SolrStoragePluginConfig.NAME)
 public class SolrStoragePluginConfig extends StoragePluginConfig {
   public static final String NAME = "solr";
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(SolrStoragePluginConfig.class);
+
+  static final Logger logger = LoggerFactory.getLogger(SolrStoragePluginConfig.class);
 
   @JsonProperty
   private String solrServer = "";
+
   @JsonProperty
   private String solrCoreViewWorkspace = "";
+
   @JsonProperty
   private SolrStorageProperties solrStorageProperties = new SolrStorageProperties();
 
   @JsonCreator
-  public SolrStoragePluginConfig(
-      @JsonProperty("solrServer") String solrServer,
-      @JsonProperty("solrCoreViewWorkspace") String solrCoreViewWorkspace,
-      @JsonProperty("solrStorageProperties") SolrStorageProperties solrStorageProperties) {
-    logger
-        .debug("Initializing SOLR StoragePlugin configuration with solr server :: "
-            + solrServer);
+  public SolrStoragePluginConfig(@JsonProperty("solrServer") String solrServer,
+                                 @JsonProperty("solrCoreViewWorkspace") String solrCoreViewWorkspace,
+                                 @JsonProperty("solrStorageProperties") SolrStorageProperties solrStorageProperties) {
+    logger.debug("Initializing SOLR StoragePlugin configuration with solr server :: " + solrServer);
     this.solrServer = solrServer;
     this.solrCoreViewWorkspace = solrCoreViewWorkspace;
     this.solrStorageProperties = solrStorageProperties;

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -32,8 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SolrQueryLimitRule extends StoragePluginOptimizerRule {
-  static final Logger logger = LoggerFactory
-      .getLogger(SolrQueryLimitRule.class);
+  static final Logger logger = LoggerFactory.getLogger(SolrQueryLimitRule.class);
 
   public SolrQueryLimitRule(RelOptRuleOperand operand, String description) {
     super(operand, description);

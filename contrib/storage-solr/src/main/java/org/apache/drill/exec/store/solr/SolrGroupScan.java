@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import java.util.List;
@@ -40,9 +41,13 @@ import com.google.common.base.Preconditions;
 @JsonTypeName("solr-scan")
 public class SolrGroupScan extends AbstractGroupScan {
   protected SolrStoragePlugin solrPlugin;
+
   protected SolrStoragePluginConfig solrPluginConfig;
+
   protected SolrScanSpec solrScanSpec;
+
   protected List<SolrScanSpec> scanList = Lists.newArrayList();
+
   protected List<SchemaPath> columns;
 
   static final Logger logger = LoggerFactory.getLogger(SolrGroupScan.class);
@@ -56,8 +61,7 @@ public class SolrGroupScan extends AbstractGroupScan {
     this.scanList.add(this.solrScanSpec);
   }
 
-  public SolrGroupScan(String userName, SolrStoragePlugin solrStoragePlugin,
-      SolrScanSpec scanSpec, List<SchemaPath> columns) {
+  public SolrGroupScan(String userName, SolrStoragePlugin solrStoragePlugin, SolrScanSpec scanSpec, List<SchemaPath> columns) {
     super(userName);
     this.solrPlugin = solrStoragePlugin;
     this.solrPluginConfig = solrStoragePlugin.getSolrStorageConfig();
@@ -75,8 +79,7 @@ public class SolrGroupScan extends AbstractGroupScan {
   }
 
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints)
-      throws PhysicalOperatorSetupException {
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
     // TODO write the distribution logic
   }
 
@@ -85,8 +88,7 @@ public class SolrGroupScan extends AbstractGroupScan {
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId)
-      throws ExecutionSetupException {
+  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
     // TODO Auto-generated method stub
     return new SolrSubScan(this);
 
@@ -112,8 +114,7 @@ public class SolrGroupScan extends AbstractGroupScan {
 
   @JsonIgnore
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
-      throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     // TODO Auto-generated method stub
     Preconditions.checkArgument(children.isEmpty());
     return new SolrGroupScan(this);
@@ -147,7 +148,6 @@ public class SolrGroupScan extends AbstractGroupScan {
 
   @Override
   public String toString() {
-    return "SolrGroupScan [SolrScanSpec=" + solrScanSpec + ", columns="
-        + columns + "]";
+    return "SolrGroupScan [SolrScanSpec=" + solrScanSpec + ", columns=" + columns + "]";
   }
 }

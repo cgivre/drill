@@ -37,27 +37,29 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SolrStoragePlugin extends AbstractStoragePlugin {
-  static final Logger logger = org.slf4j.LoggerFactory
-      .getLogger(SolrStoragePlugin.class);
+  static final Logger logger = LoggerFactory.getLogger(SolrStoragePlugin.class);
 
   private final SolrStoragePluginConfig solrStorageConfig;
+
   private final SolrClient solrClient;
+
   private final DrillbitContext context;
+
   private final SolrSchemaFactory schemaFactory;
+
   private SolrClientAPIExec solrClientApiExec;
 
-  public SolrStoragePlugin(SolrStoragePluginConfig solrStoragePluginConfig,
-      DrillbitContext context, String name) {
+  public SolrStoragePlugin(SolrStoragePluginConfig solrStoragePluginConfig, DrillbitContext context, String name) throws IOException {
+    super(context, name);
     logger.debug("initializing solr storage plugin....");
     this.context = context;
     this.solrStorageConfig = solrStoragePluginConfig;
-    solrClient = new HttpSolrClient.Builder()
-      .withBaseSolrUrl(solrStorageConfig.getSolrServer())
-      .build();
+    solrClient = new HttpSolrClient.Builder().withBaseSolrUrl(solrStorageConfig.getSolrServer()).build();
     solrClientApiExec = new SolrClientAPIExec(solrClient);
     this.schemaFactory = new SolrSchemaFactory(this, name);
   }
@@ -93,17 +95,14 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent)
-      throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
     schemaFactory.registerSchemas(schemaConfig, parent);
   }
 
   @Override
-  public AbstractGroupScan getPhysicalScan(String userName,
-      JSONOptions selection, List<SchemaPath> columns) throws IOException {
-    SolrScanSpec solrScanSpec = selection.getListWith(new ObjectMapper(),
-        new TypeReference<SolrScanSpec>() {
-        });
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) throws IOException {
+    SolrScanSpec solrScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<SolrScanSpec>() {
+    });
     return new SolrGroupScan(userName, this, solrScanSpec, columns);
   }
 
@@ -115,7 +114,6 @@ public class SolrStoragePlugin extends AbstractStoragePlugin {
      * SolrQueryFilterRule.FILTER_ON_PROJECT,
      
      SolrQueryFilterRule.FILTER_ON_PROJECT,*/
-      SolrQueryFilterRule.AGG_PUSH_DOWN,
-      SolrQueryLimitRule.LIMIT_ON_SCAN, SolrQueryLimitRule.LIMIT_ON_PROJECT);
+      SolrQueryFilterRule.AGG_PUSH_DOWN, SolrQueryLimitRule.LIMIT_ON_SCAN, SolrQueryLimitRule.LIMIT_ON_PROJECT);
   }
 }

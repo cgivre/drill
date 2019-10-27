@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.slf4j.LoggerFactory;
 
 public class SolrSubScan extends AbstractBase implements SubScan {

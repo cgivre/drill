@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import java.math.BigDecimal;
@@ -43,35 +44,46 @@ import org.apache.solr.client.solrj.response.FieldStatsInfo;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import static org.apache.drill.common.expression.SchemaPath.STAR_COLUMN;
 
 public class SolrAggrReader extends AbstractRecordReader {
-  static final Logger logger = LoggerFactory.getLogger(SolrAggrReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(SolrAggrReader.class);
 
   private FragmentContext fc;
-  protected Map<String, ValueVector> vectors = Maps.newHashMap();
-  protected String solrServerUrl;
-  protected SolrClient solrClient;
-  protected SolrSubScan solrSubScan;
-  protected List<SolrScanSpec> scanList;
-  protected SolrClientAPIExec solrClientApiExec;
+
+  private Map<String, ValueVector> vectors = Maps.newHashMap();
+
+  private String solrServerUrl;
+
+  private SolrClient solrClient;
+
+  private SolrSubScan solrSubScan;
+
+  private List<SolrScanSpec> scanList;
+
+  private SolrClientAPIExec solrClientApiExec;
+
   protected OutputMutator outputMutator;
-  protected List<String> fields;
+
+  private List<String> fields;
+
   private MajorType.Builder t;
-  Map<String, FieldStatsInfo> fieldStatsInfoMap;
+
+  private Map<String, FieldStatsInfo> fieldStatsInfoMap;
+
   private List<SolrAggrParam> solrAggrParams;
+
   private Map<String, SolrSchemaField> schemaFieldMap;
 
   public SolrAggrReader(FragmentContext context, SolrSubScan config) {
     fc = context;
     solrSubScan = config;
 
-    solrServerUrl = solrSubScan.getSolrPlugin().getSolrStorageConfig()
-        .getSolrServer();
+    solrServerUrl = solrSubScan.getSolrPlugin().getSolrStorageConfig().getSolrServer();
     scanList = solrSubScan.getScanList();
     solrClientApiExec = solrSubScan.getSolrPlugin().getSolrClientApiExec();
     solrClient = solrSubScan.getSolrPlugin().getSolrClient();
@@ -83,8 +95,7 @@ public class SolrAggrReader extends AbstractRecordReader {
     SolrSchemaPojo oCVSchema = config.getSolrScanSpec().getCvSchema();
 
     if (oCVSchema.getSchemaFields() != null) {
-      schemaFieldMap = new HashMap<String, SolrSchemaField>(oCVSchema
-          .getSchemaFields().size());
+      schemaFieldMap = new HashMap<String, SolrSchemaField>(oCVSchema.getSchemaFields().size());
 
       for (SolrSchemaField cvSchemaField : oCVSchema.getSchemaFields()) {
         if (!cvSchemaField.isSkipdelete()) {
@@ -103,9 +114,7 @@ public class SolrAggrReader extends AbstractRecordReader {
     setColumns(colums);
     // Query Response
     if (!solrAggrParams.isEmpty()) {
-      QueryResponse queryRsp = solrClientApiExec.getSolrFieldStats(
-          solrServerUrl, solrCoreName, oCVSchema.getUniqueKey(), this.fields,
-          sb);
+      QueryResponse queryRsp = solrClientApiExec.getSolrFieldStats(solrServerUrl, solrCoreName, oCVSchema.getUniqueKey(), this.fields, sb);
       if (queryRsp != null) {
         fieldStatsInfoMap = queryRsp.getFieldStatsInfo();
       }
@@ -114,13 +123,10 @@ public class SolrAggrReader extends AbstractRecordReader {
   }
 
   @Override
-  protected Collection<SchemaPath> transformColumns(
-      Collection<SchemaPath> projectedColumns) {
+  protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projectedColumns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (!isStarQuery()) {
-      logger
-          .debug(" This is not a star query, restricting response to projected columns only "
-              + projectedColumns);
+      logger.debug(" This is not a star query, restricting response to projected columns only " + projectedColumns);
       fields = Lists.newArrayListWithExpectedSize(projectedColumns.size());
       for (SchemaPath column : projectedColumns) {
         String fieldName = column.getRootSegment().getPath();
@@ -128,7 +134,6 @@ public class SolrAggrReader extends AbstractRecordReader {
           transformed.add(SchemaPath.getSimplePath(fieldName));
           this.fields.add(fieldName);
         }
-
       }
     } else {
       fields = Lists.newArrayListWithExpectedSize(schemaFieldMap.size());
@@ -141,26 +146,22 @@ public class SolrAggrReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(OperatorContext context, OutputMutator output)
-      throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     logger.debug("SolrAggrReader :: setup");
     int counter = 0;
     if (fieldStatsInfoMap != null) {
       for (SolrAggrParam solrAggrParam : solrAggrParams) {
         if (fieldStatsInfoMap.containsKey(solrAggrParam.getFieldName())) {
           t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.BIGINT);
-          MaterializedField m_field = MaterializedField.create(
-              solrAggrParam.getFieldName(), t.build());
+          MaterializedField m_field = MaterializedField.create(solrAggrParam.getFieldName(), t.build());
           try {
             String key = solrAggrParam.getFunctionName() + "_" + counter;
-            vectors.put(key,
-                output.addField(m_field, NullableBigIntVector.class));
+            vectors.put(key, output.addField(m_field, NullableBigIntVector.class));
             counter++;
           } catch (SchemaChangeException e) {
 
           }
         }
-
       }
     }
   }
@@ -190,18 +191,15 @@ public class SolrAggrReader extends AbstractRecordReader {
           } else if (functionName.equalsIgnoreCase("max")) {
             value = fieldStats.getMax();
           } else {
-            logger.debug("yet to implement function type [ " + functionName
-                + " ]");
+            logger.debug("yet to implement function type [ " + functionName + " ]");
           }
           Long l = 0l;
           if (value != null) {
             BigDecimal bd = new BigDecimal(value.toString());
             l = bd.longValue();
           }
-          logger.debug("functionName [ " + functionName + " ] value is " + l
-              + " index " + counter);
+          logger.debug("functionName [ " + functionName + " ] value is " + l + " index " + counter);
           v.getMutator().setSafe(counter, l);
-
         }
         counter++;
       }

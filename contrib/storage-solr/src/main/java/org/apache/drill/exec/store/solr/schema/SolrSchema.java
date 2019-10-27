@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr.schema;
 
 import java.io.IOException;
@@ -35,26 +36,31 @@ import org.apache.drill.exec.store.sys.StaticDrillTable;
 import org.apache.http.client.ClientProtocolException;
 
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SolrSchema extends AbstractSchema {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(SolrSchema.class);
+  static final Logger logger = LoggerFactory.getLogger(SolrSchema.class);
+
   private final Set<String> availableSolrCores;
+
   private String currentSchema = "root";
+
   private final Map<String, DrillTable> drillTables = Maps.newHashMap();
+
   private final Map<String, SolrSchemaPojo> schemaMap = Maps.newHashMap();
+
   private final SolrStoragePlugin solrStoragePlugin;
+
   private final List<String> schemaPath;
 
-  public SolrSchema(List<String> schemaPath, String currentSchema,
-      SolrStoragePlugin solrStoragePlugin) {
+  public SolrSchema(List<String> schemaPath, String currentSchema, SolrStoragePlugin solrStoragePlugin) {
     super(schemaPath, currentSchema);
     this.schemaPath = schemaPath;
     this.currentSchema = currentSchema;
     this.solrStoragePlugin = solrStoragePlugin;
-    availableSolrCores = solrStoragePlugin.getSolrClientApiExec()
-        .getSolrCoreList();
+    availableSolrCores = solrStoragePlugin.getSolrClientApiExec().getSolrCoreList();
   }
 
   @Override
@@ -83,20 +89,20 @@ public class SolrSchema extends AbstractSchema {
         oCVSchema = schemaMap.get(coreName);
 
       } else {
-        String solrServerUrl = this.solrStoragePlugin.getSolrStorageConfig()
-            .getSolrServer();
-        String schemaUrl = this.solrStoragePlugin.getSolrStorageConfig()
-            .getSolrStorageProperties().getSolrSchemaUrl();
-        oCVSchema = this.solrStoragePlugin.getSolrClientApiExec()
-            .getSchemaForCore(coreName, solrServerUrl, schemaUrl);
+        String solrServerUrl = this.solrStoragePlugin.getSolrStorageConfig().getSolrServer();
+        String schemaUrl = this.solrStoragePlugin.getSolrStorageConfig().getSolrStorageProperties().getSolrSchemaUrl();
+        oCVSchema = this.solrStoragePlugin.getSolrClientApiExec().getSchemaForCore(coreName, solrServerUrl, schemaUrl);
 
         if (!schemaMap.containsKey(coreName)) {
           schemaMap.put(coreName, oCVSchema);
         }
       }
       SolrScanSpec scanSpec = new SolrScanSpec(coreName, oCVSchema);
-      drillTable = new StaticDrillTable(SolrStoragePluginConfig.NAME,
-          solrStoragePlugin, scanSpec, new SolrDataType(scanSpec.getCvSchema()));
+      drillTable = new StaticDrillTable(SolrStoragePluginConfig.NAME, solrStoragePlugin, scanSpec, new SolrDataType(scanSpec.getCvSchema()));
+
+
+      //public StaticDrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, Object selection, RecordDataType dataType) {
+
 
       drillTables.put(coreName, drillTable);
 
@@ -118,10 +124,10 @@ public class SolrSchema extends AbstractSchema {
   @Override
   public Set<String> getTableNames() {
     logger.debug("SolrSchema :: getTableNames");
-    SolrStorageProperties solrStorageConfig = this.solrStoragePlugin
-        .getSolrStorageConfig().getSolrStorageProperties();
-    if (solrStorageConfig.isCreateViews())
+    SolrStorageProperties solrStorageConfig = this.solrStoragePlugin.getSolrStorageConfig().getSolrStorageProperties();
+    if (solrStorageConfig.isCreateViews()) {
       createORReplaceViews();
+    }
     return availableSolrCores;
   }
 
@@ -133,28 +139,22 @@ public class SolrSchema extends AbstractSchema {
   private void createORReplaceViews() {
     logger.debug("SolrStoragePlugin :: createORReplaceViews");
 
-    String solrServerUrl = this.solrStoragePlugin.getSolrStorageConfig()
-        .getSolrServer();
-    String solrCoreViewWorkspace = this.solrStoragePlugin
-        .getSolrStorageConfig().getSolrCoreViewWorkspace();
-    String schemaUrl = this.solrStoragePlugin.getSolrStorageConfig()
-        .getSolrStorageProperties().getSolrSchemaUrl();
+    String solrServerUrl = this.solrStoragePlugin.getSolrStorageConfig().getSolrServer();
+    String solrCoreViewWorkspace = this.solrStoragePlugin.getSolrStorageConfig().getSolrCoreViewWorkspace();
+    String schemaUrl = this.solrStoragePlugin.getSolrStorageConfig().getSolrStorageProperties().getSolrSchemaUrl();
     try {
       if (!availableSolrCores.isEmpty()) {
         for (String solrCoreName : availableSolrCores) {
-          SolrSchemaPojo oCVSchema = this.solrStoragePlugin.getSolrClientApiExec()
-              .getSchemaForCore(solrCoreName, solrServerUrl, schemaUrl);
+          SolrSchemaPojo oCVSchema = this.solrStoragePlugin.getSolrClientApiExec().getSchemaForCore(solrCoreName, solrServerUrl, schemaUrl);
 
-          this.solrStoragePlugin.getSolrClientApiExec().createSolrView(
-              solrCoreName, solrCoreViewWorkspace, oCVSchema);
+          this.solrStoragePlugin.getSolrClientApiExec().createSolrView(solrCoreName, solrCoreViewWorkspace, oCVSchema);
           if (!schemaMap.containsKey(solrCoreName)) {
             schemaMap.put(solrCoreName, oCVSchema);
           }
         }
 
       } else {
-        logger.debug("There is no cores in the current solr server : "
-            + solrServerUrl);
+        logger.debug("There is no cores in the current solr server : " + solrServerUrl);
       }
 
     } catch (ClientProtocolException e) {
@@ -162,6 +162,5 @@ public class SolrSchema extends AbstractSchema {
     } catch (IOException e) {
       logger.debug("creating view failed : " + e.getMessage());
     }
-
   }
 }

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.solr;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -50,6 +52,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.io.Tuple;
 import org.apache.solr.client.solrj.io.stream.SolrStream;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.joda.time.format.DateTimeFormat;
@@ -285,19 +288,32 @@ public class SolrRecordReader extends AbstractRecordReader {
         if (solrDocFetchCount == -1) {
           solrDocFetchCount = Integer.MAX_VALUE;
         }
-        SolrDocumentList solrDocList = solrClientApiExec.getSolrDocs(
-            solrServerUrl, solrCoreName, uniqueKey, this.fields,
-            solrDocFetchCount, sb); // solr
+
+        /*
+         getSolrDocs(String solrServer, String solrCoreName,
+      String uniqueKey, List<String> fields, Integer solrDocFectCount,
+      StringBuilder filters, List<SolrAggrParam> solrAggrParams, boolean isGroup)
+         */
+
+
+
+        QueryResponse solrDocList = solrClientApiExec.getSolrDocs(
+          solrServerUrl,
+          solrCoreName,
+          uniqueKey,
+          fields,
+          solrDocFetchCount,
+          sb,
+          null, false); // solr
         // docs
 
-        logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.size());
+        logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.getResults().size());
 
-        for (SolrDocument solrDocument : solrDocList) {
+        for (SolrDocument solrDocument : solrDocList.getResults()) {
           for (String columns : vectors.keySet()) {
             ValueVector vv = vectors.get(columns);
             Object fieldValue = solrDocument.get(columns);
             processRecord(vv, fieldValue, counter);
-
           }
           counter++;
         }
@@ -364,14 +380,13 @@ public class SolrRecordReader extends AbstractRecordReader {
     }
   }
 
-  @Override
-  public void allocate(Map<MaterializedField.Key, ValueVector> vectorMap)
-      throws OutOfMemoryException {
+  /*@Override
+  public void allocate (Map<MaterializedField, ValueVector> vectorMap) throws OutOfMemoryException {
     super.allocate(vectorMap);
-  }
+  }*/
 
   @Override
-  public void cleanup() {
+  public void close() {
 
   }
 
