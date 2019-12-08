@@ -35,7 +35,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class SolrScanBatchCreator implements BatchCreator<SolrSubScan> {
-  static final Logger logger = LoggerFactory.getLogger(SolrScanBatchCreator.class);
+  private static final Logger logger = LoggerFactory.getLogger(SolrScanBatchCreator.class);
 
   @Override
   public ScanBatch getBatch(ExecutorFragmentContext context, SolrSubScan solrSubScan, List<RecordBatch> children) throws ExecutionSetupException {
@@ -49,9 +49,7 @@ public class SolrScanBatchCreator implements BatchCreator<SolrSubScan> {
         columns = GroupScan.ALL_COLUMNS;
       }
       boolean isAggregateQuery = solrSubScan.getSolrScanSpec().isAggregateQuery();
-      // if (isAggregateQuery)
-      //   readers.add(new SolrAggrReader(context, solrSubScan));
-      // else
+
       readers.add(new SolrRecordReader(context, solrSubScan));
     } catch (Exception e) {
       logger.info("SolrScanBatchCreator creation failed for subScan:  " + solrSubScan + ".");

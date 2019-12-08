@@ -22,8 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestSolr extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(TestSolr.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSolr.class);
   private static final String solrServer = "http://localhost:20000/solr/";
   private static final String solrCoreName = "bootstrap_5";
   private SolrScanSpec solrScanSpec;

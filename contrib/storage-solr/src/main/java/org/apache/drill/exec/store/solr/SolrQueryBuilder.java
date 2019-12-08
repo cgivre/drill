@@ -34,7 +34,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class SolrQueryBuilder extends AbstractExprVisitor<SolrScanSpec, Void, RuntimeException> {
-  static final Logger logger = LoggerFactory.getLogger(SolrQueryBuilder.class);
+ private static final Logger logger = LoggerFactory.getLogger(SolrQueryBuilder.class);
 
   final SolrGroupScan groupScan;
 

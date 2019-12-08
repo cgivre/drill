@@ -39,7 +39,6 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.planner.physical.PrelUtil.ProjectPushInfo;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
 import org.slf4j.Logger;
@@ -48,8 +47,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 
 public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
-  static final Logger logger = LoggerFactory
-      .getLogger(SolrQueryFilterRule.class);
+  private static final Logger logger = LoggerFactory.getLogger(SolrQueryFilterRule.class);
 
   public static final StoragePluginOptimizerRule FILTER_ON_SCAN = new SolrQueryFilterRule(
       RelOptHelper.some(DrillFilterRel.class,

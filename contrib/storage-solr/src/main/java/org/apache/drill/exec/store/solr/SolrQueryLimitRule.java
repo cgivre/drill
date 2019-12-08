@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SolrQueryLimitRule extends StoragePluginOptimizerRule {
-  static final Logger logger = LoggerFactory.getLogger(SolrQueryLimitRule.class);
+  private static final Logger logger = LoggerFactory.getLogger(SolrQueryLimitRule.class);
 
   public SolrQueryLimitRule(RelOptRuleOperand operand, String description) {
     super(operand, description);

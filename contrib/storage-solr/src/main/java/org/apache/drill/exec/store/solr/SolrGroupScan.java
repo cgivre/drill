@@ -50,7 +50,7 @@ public class SolrGroupScan extends AbstractGroupScan {
 
   protected List<SchemaPath> columns;
 
-  static final Logger logger = LoggerFactory.getLogger(SolrGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(SolrGroupScan.class);
 
   public SolrGroupScan(SolrGroupScan that) {
     super(that);

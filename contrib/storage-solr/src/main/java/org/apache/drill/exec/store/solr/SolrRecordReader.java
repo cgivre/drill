@@ -33,7 +33,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -54,7 +53,6 @@ import org.apache.solr.client.solrj.io.Tuple;
 import org.apache.solr.client.solrj.io.stream.SolrStream;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -67,7 +65,7 @@ import com.google.common.collect.Sets;
 import static org.apache.drill.common.expression.SchemaPath.STAR_COLUMN;
 
 public class SolrRecordReader extends AbstractRecordReader {
-  static final Logger logger = LoggerFactory.getLogger(SolrRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(SolrRecordReader.class);
 
   private FragmentContext fc;
   protected Map<String, ValueVector> vectors = null;
@@ -82,8 +80,6 @@ public class SolrRecordReader extends AbstractRecordReader {
   protected List<String> fields;
   private MajorType.Builder t;
   private Map<String, SolrSchemaField> schemaFieldMap;
-  // private Iterator<Tuple> resultIter;
-  // private List<Tuple> solrDocsTuple;
   private static final String defaultDateFormat = "EEE MMM dd kk:mm:ss z yyyy";
   private static final String ISODateFormat = "yyyyMMdd'T'HHmmss'Z'";
   private boolean solrStreamReadFinished = false;
