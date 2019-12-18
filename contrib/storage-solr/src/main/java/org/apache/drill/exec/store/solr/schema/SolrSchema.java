@@ -98,7 +98,10 @@ public class SolrSchema extends AbstractSchema {
         }
       }
       SolrScanSpec scanSpec = new SolrScanSpec(coreName, oCVSchema);
-      drillTable = new StaticDrillTable(SolrStoragePluginConfig.NAME, solrStoragePlugin, scanSpec, new SolrDataType(scanSpec.getCvSchema()));
+
+      //  public StaticDrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, Object selection, RecordDataType dataType) {
+
+      drillTable = new StaticDrillTable(SolrStoragePluginConfig.NAME, solrStoragePlugin, scanSpec, oCVSchema, new SolrDataType(scanSpec.getCvSchema()));
 
 
       //public StaticDrillTable(String storageEngineName, StoragePlugin plugin, TableType tableType, Object selection, RecordDataType dataType) {

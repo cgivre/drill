@@ -19,6 +19,8 @@
 package org.apache.drill.exec.store.solr;
 
 import org.slf4j.Logger;
+
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,7 +36,6 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.slf4j.LoggerFactory;
 
 public class SolrSubScan extends AbstractBase implements SubScan {
@@ -109,7 +110,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+    return Collections.emptyIterator();
   }
 
   @JsonProperty("columns")
