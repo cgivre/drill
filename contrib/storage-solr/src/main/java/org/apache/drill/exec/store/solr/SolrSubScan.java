@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.solr;
 
-import org.slf4j.Logger;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -37,16 +36,22 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
 
 public class SolrSubScan extends AbstractBase implements SubScan {
   static final Logger logger = LoggerFactory.getLogger(SolrSubScan.class);
 
   @JsonIgnore
   private SolrStoragePlugin solrPlugin;
+
   @JsonProperty
   private SolrStoragePluginConfig solrPluginConfig;
+
   private SolrScanSpec solrScanSpec;
+
   private List<SchemaPath> columns;
+
   private List<SolrScanSpec> scanList;
 
   private String userName;
@@ -62,12 +67,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
   }
 
   @JsonCreator
-  public SolrSubScan(@JacksonInject StoragePluginRegistry registry,
-      String userName,
-      @JsonProperty("solrPluginConfig") SolrStoragePluginConfig pluginConfig,
-      @JsonProperty("solrScanSpec") List<SolrScanSpec> scanList,
-      @JsonProperty("columns") List<SchemaPath> columns)
-      throws ExecutionSetupException {
+  public SolrSubScan(@JacksonInject StoragePluginRegistry registry, String userName, @JsonProperty("solrPluginConfig") SolrStoragePluginConfig pluginConfig, @JsonProperty("solrScanSpec") List<SolrScanSpec> scanList, @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     super(userName);
     logger.debug("SolrSubScan : constructor11 ::" + columns);
     this.solrPlugin = (SolrStoragePlugin) registry.getPlugin(pluginConfig);
@@ -77,9 +77,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
     this.userName = userName;
   }
 
-  public SolrSubScan(SolrStoragePlugin plugin, String userName,
-      SolrStoragePluginConfig pluginConfig, List<SolrScanSpec> scanList,
-      List<SchemaPath> columns) {
+  public SolrSubScan(SolrStoragePlugin plugin, String userName, SolrStoragePluginConfig pluginConfig, List<SolrScanSpec> scanList, List<SchemaPath> columns) {
     super(userName);
     this.columns = columns;
     this.solrPlugin = plugin;
@@ -89,17 +87,14 @@ public class SolrSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public <T, X, E extends Throwable> T accept(
-      PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitSubScan(this, value);
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
-      throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     logger.debug("SolrSubScan : getNewWithChildren ::");
-    return new SolrSubScan(solrPlugin, null, solrPluginConfig, scanList,
-        columns);
+    return new SolrSubScan(solrPlugin, null, solrPluginConfig, scanList, columns);
   }
 
   @Override

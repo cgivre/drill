@@ -18,7 +18,9 @@
 
 package org.apache.drill.exec.store.solr.datatype;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.AbstractMap.SimpleImmutableEntry;
 
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.store.RecordDataType;
@@ -27,16 +29,18 @@ import org.apache.drill.exec.store.solr.schema.SolrSchemaField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class SolrDataType extends RecordDataType {
-  private final List<SqlTypeName> types = Lists.newArrayList();
+  private static final Logger logger = LoggerFactory.getLogger(SolrDataType.class);
+
+  private final List<SimpleImmutableEntry<SqlTypeName, Boolean>> types = new ArrayList<>();
 
   private final List<String> names = Lists.newArrayList();
 
   private final SolrSchemaPojo cvSchema;
 
-  static final Logger logger = LoggerFactory.getLogger(SolrDataType.class);
+  private final boolean isNullable = true;
 
   public SolrDataType(SolrSchemaPojo cvSchema) {
     this.cvSchema = cvSchema;
@@ -48,27 +52,27 @@ public class SolrDataType extends RecordDataType {
         names.add(cvSchemaField.getFieldName());
         String solrFieldType = cvSchemaField.getType();
         if (solrFieldType.equals("string") || solrFieldType.equals("commaDelimited") || solrFieldType.equals("text_general") || solrFieldType.equals("currency") || solrFieldType.equals("uuid")) {
-          types.add(SqlTypeName.VARCHAR);
+          types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.VARCHAR, isNullable));
         } else if (solrFieldType.equals("int") || solrFieldType.equals("tint") || solrFieldType.equals("pint")) {
-          types.add(SqlTypeName.INTEGER);
+          types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.INTEGER, isNullable));
         } else if (solrFieldType.equals("boolean")) {
-          types.add(SqlTypeName.BOOLEAN);
+          types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.BOOLEAN, isNullable));
         } else if (solrFieldType.equals("double") || solrFieldType.equals("pdouble") || solrFieldType.equals("tdouble") || solrFieldType.equals("tlong") || solrFieldType.equals("rounded1024") || solrFieldType.equals("long")) {
-          types.add(SqlTypeName.DOUBLE);
+          types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.DOUBLE, isNullable));
         } else if (solrFieldType.equals("date") || solrFieldType.equals("tdate") || solrFieldType.equals("timestamp")) {
-          types.add(SqlTypeName.TIMESTAMP);
+          types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.TIMESTAMP, isNullable));
         } else if (solrFieldType.equals("float") || solrFieldType.equals("tfloat")) {
-          types.add(SqlTypeName.DECIMAL);
+          types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.DECIMAL, isNullable));
         } else {
           logger.trace(String.format("PojoDataType doesn't yet support conversions from type [%s] for field [%s].Defaulting to varchar.", solrFieldType, cvSchemaField.getFieldName()));
-          types.add(SqlTypeName.VARCHAR);
+          types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.VARCHAR, isNullable));
         }
       }
     }
   }
 
   @Override
-  public List<SqlTypeName> getFieldSqlTypeNames() {
+  public List<SimpleImmutableEntry<SqlTypeName, Boolean>> getFieldSqlTypeNames() {
     return types;
   }
 
