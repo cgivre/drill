@@ -44,15 +44,15 @@ import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+
 
 public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
   private static final Logger logger = LoggerFactory.getLogger(SolrQueryFilterRule.class);
 
-  public static final StoragePluginOptimizerRule FILTER_ON_SCAN = new SolrQueryFilterRule(
-      RelOptHelper.some(DrillFilterRel.class,
-          RelOptHelper.any(DrillScanRel.class)),
-      "SolrQueryFilterRule:Filter_On_Scan") {
+  public static final StoragePluginOptimizerRule FILTER_ON_SCAN = new SolrQueryFilterRule(RelOptHelper.some(DrillFilterRel.class,
+    RelOptHelper.any(DrillScanRel.class)), "SolrQueryFilterRule:Filter_On_Scan") {
+
     @Override
     public void onMatch(RelOptRuleCall call) {
       final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
@@ -71,10 +71,10 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
     }
   };
 
-  public static final StoragePluginOptimizerRule FILTER_ON_PROJECT = new SolrQueryFilterRule(
-      RelOptHelper.some(DrillProjectRel.class,
-          RelOptHelper.any(DrillScanRel.class)),
-      "StoragePluginOptimizerRule:Filter_On_Project") {
+  public static final StoragePluginOptimizerRule FILTER_ON_PROJECT = new SolrQueryFilterRule(RelOptHelper.some(DrillProjectRel.class,
+    RelOptHelper.any(DrillScanRel.class)),
+    "StoragePluginOptimizerRule:Filter_On_Project") {
+
     @Override
     public void onMatch(RelOptRuleCall call) {
       logger.debug("SolrQueryFilterRule :: onMatch:: Filter_On_Project");
@@ -84,12 +84,11 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
       try {
         DrillRelOptUtil.ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
         if (columnInfo == null || columnInfo.isStarQuery() //
-            || !scan.getTable().unwrap(DrillTable.class) //
-                .getGroupScan().canPushdownProjects(columnInfo.columns)) {
+          || !scan.getTable().unwrap(DrillTable.class) //
+          .getGroupScan().canPushdownProjects(columnInfo.columns)) {
           return;
         }
-        SolrGroupScan solrGroupScan = (SolrGroupScan) scan.getTable()
-            .unwrap(DrillTable.class).getGroupScan();
+        SolrGroupScan solrGroupScan = (SolrGroupScan) scan.getTable().unwrap(DrillTable.class).getGroupScan();
         solrGroupScan.setColumns(columnInfo.columns);
         // DrillRel inputRel = null;
         //
@@ -127,15 +126,14 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
       return false;
     }
   };
+
   /*
    * Move this class out
    */
-  public static final StoragePluginOptimizerRule AGG_PUSH_DOWN = new SolrQueryFilterRule(
-      RelOptHelper.some(
-          DrillAggregateRel.class,
-          RelOptHelper.some(DrillProjectRel.class,
-              RelOptHelper.any(DrillScanRel.class))),
-      "StoragePluginOptimizerRule:AGG_PUSH_DOWN") {
+  public static final StoragePluginOptimizerRule AGG_PUSH_DOWN = new SolrQueryFilterRule(RelOptHelper.some(DrillAggregateRel.class,
+    RelOptHelper.some(DrillProjectRel.class,
+      RelOptHelper.any(DrillScanRel.class))),
+    "StoragePluginOptimizerRule:AGG_PUSH_DOWN") {
 
     @Override
     public void onMatch(RelOptRuleCall call) {
@@ -157,9 +155,7 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
       return false;
     }
 
-    protected void doOnAggrMatch(RelOptRuleCall call,
-        DrillAggregateRel aggrRel, DrillProjectRel projectRel,
-        DrillScanRel scanRel) {
+    protected void doOnAggrMatch(RelOptRuleCall call, DrillAggregateRel aggrRel, DrillProjectRel projectRel, DrillScanRel scanRel) {
 
       DrillRel inputRel = projectRel != null ? projectRel : scanRel;
       SolrGroupScan solrGroupScan = (SolrGroupScan) scanRel.getGroupScan();
@@ -174,28 +170,19 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
       SolrFilterParam filters = solrScanSpec.getFilter();
       SolrScanSpec newScanSpec = null;
       for (AggregateCall aggrCall : aggrCallList) {
-        LogicalExpression logicalExp = DrillAggregateRel.toDrill(aggrCall,
-            aggrFields, null);
+        LogicalExpression logicalExp = DrillAggregateRel.toDrill(aggrCall, aggrFields, null);
 
-        SolrAggrQueryBuilder sAggrBuilder = new SolrAggrQueryBuilder(
-            solrGroupScan, logicalExp);
+        SolrAggrQueryBuilder sAggrBuilder = new SolrAggrQueryBuilder(solrGroupScan, logicalExp);
         newScanSpec = sAggrBuilder.parseTree();
-        if (newScanSpec == null)
-          return;
+        if (newScanSpec == null) return;
 
         newScanSpec.setAggregateQuery(true);
-        SolrGroupScan newGroupScan = new SolrGroupScan(
-            solrGroupScan.getUserName(), solrGroupScan.getSolrPlugin(),
-            newScanSpec, solrGroupScan.getColumns());
+        SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(), solrGroupScan.getSolrPlugin(), newScanSpec, solrGroupScan.getColumns());
 
-        DrillScanRel newScanRel = new DrillScanRel(scanRel.getCluster(),
-            scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-            scanRel.getTable(), newGroupScan, scanRel.getRowType(),
-            scanRel.getColumns());
+        DrillScanRel newScanRel = new DrillScanRel(scanRel.getCluster(), scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL), scanRel.getTable(), newGroupScan, scanRel.getRowType(), scanRel.getColumns());
 
         inputRel = newScanRel;
-        call.transformTo(aggrRel.copy(aggrRel.getTraitSet(),
-            ImmutableList.of((RelNode) inputRel)));
+        call.transformTo(aggrRel.copy(aggrRel.getTraitSet(), ImmutableList.of((RelNode) inputRel)));
       }
 
     }
@@ -206,31 +193,22 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
     logger.debug("SolrQueryFilterRule :: contructor");
   }
 
-  protected void doOnMatch(RelOptRuleCall call, DrillFilterRel filterRel,
-      DrillProjectRel projectRel, DrillScanRel scanRel) {
+  protected void doOnMatch(RelOptRuleCall call, DrillFilterRel filterRel, DrillProjectRel projectRel, DrillScanRel scanRel) {
 
     DrillRel inputRel = projectRel != null ? projectRel : scanRel;
     SolrGroupScan solrGroupScan = (SolrGroupScan) scanRel.getGroupScan();
     final RexNode condition = filterRel.getCondition();
 
-    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(
-        PrelUtil.getPlannerSettings(call.getPlanner())), scanRel, condition);
+    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scanRel, condition);
 
-    SolrQueryBuilder sQueryBuilder = new SolrQueryBuilder(solrGroupScan,
-        conditionExp);
+    SolrQueryBuilder sQueryBuilder = new SolrQueryBuilder(solrGroupScan, conditionExp);
     SolrScanSpec newScanSpec = sQueryBuilder.parseTree();
-    if (newScanSpec == null)
-      return;
-    SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(),
-        solrGroupScan.getSolrPlugin(), newScanSpec, solrGroupScan.getColumns());
+    if (newScanSpec == null) return;
+    SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(), solrGroupScan.getSolrPlugin(), newScanSpec, solrGroupScan.getColumns());
 
-    DrillScanRel newScanRel = new DrillScanRel(scanRel.getCluster(), scanRel
-        .getTraitSet().plus(DrillRel.DRILL_LOGICAL), scanRel.getTable(),
-        newGroupScan, scanRel.getRowType(), scanRel.getColumns());
+    DrillScanRel newScanRel = new DrillScanRel(scanRel.getCluster(), scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL), scanRel.getTable(), newGroupScan, scanRel.getRowType(), scanRel.getColumns());
     if (projectRel != null) {
-      DrillProjectRel newProjectRel = DrillProjectRel.create(
-          projectRel.getCluster(), projectRel.getTraitSet(), newScanRel,
-          projectRel.getProjects(), projectRel.getRowType());
+      DrillProjectRel newProjectRel = DrillProjectRel.create(projectRel.getCluster(), projectRel.getTraitSet(), newScanRel, projectRel.getProjects(), projectRel.getRowType());
       inputRel = newProjectRel;
     } else {
       inputRel = newScanRel;
@@ -240,8 +218,7 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
       logger.debug("all expressions converted.. ");
       call.transformTo(inputRel);
     } else {
-      call.transformTo(filterRel.copy(filterRel.getTraitSet(),
-          ImmutableList.of((RelNode) inputRel)));
+      call.transformTo(filterRel.copy(filterRel.getTraitSet(), ImmutableList.of((RelNode) inputRel)));
     }
   }
 }

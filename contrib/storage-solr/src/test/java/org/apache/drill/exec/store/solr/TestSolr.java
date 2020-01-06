@@ -20,9 +20,11 @@ package org.apache.drill.exec.store.solr;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestSolr extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSolr.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestSolr.class);
   private static final String solrServer = "http://localhost:20000/solr/";
   private static final String solrCoreName = "bootstrap_5";
   private SolrScanSpec solrScanSpec;

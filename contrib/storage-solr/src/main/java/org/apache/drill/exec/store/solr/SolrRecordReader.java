@@ -58,9 +58,9 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import static org.apache.drill.common.expression.SchemaPath.STAR_COLUMN;
 
@@ -68,49 +68,58 @@ public class SolrRecordReader extends AbstractRecordReader {
   private static final Logger logger = LoggerFactory.getLogger(SolrRecordReader.class);
 
   private FragmentContext fc;
+
   protected Map<String, ValueVector> vectors = null;
+
   protected String solrServerUrl;
+
   protected SolrClient solrClient;
+
   protected SolrSubScan solrSubScan;
+
   protected List<SolrScanSpec> scanList;
+
   protected SolrClientAPIExec solrClientApiExec;
+
   protected OutputMutator outputMutator;
 
   protected Iterator<SolrDocument> resultDocsIter;
+
   protected List<String> fields;
+
   private MajorType.Builder t;
+
   private Map<String, SolrSchemaField> schemaFieldMap;
+
   private static final String defaultDateFormat = "EEE MMM dd kk:mm:ss z yyyy";
+
   private static final String ISODateFormat = "yyyyMMdd'T'HHmmss'Z'";
+
   private boolean solrStreamReadFinished = false;
+
   private boolean useSolrStream = false;
 
   public SolrRecordReader(FragmentContext context, SolrSubScan config) {
     fc = context;
     solrSubScan = config;
 
-    solrServerUrl = solrSubScan.getSolrPlugin().getSolrStorageConfig()
-        .getSolrServer();
+    solrServerUrl = solrSubScan.getSolrPlugin().getSolrStorageConfig().getSolrServer();
     scanList = solrSubScan.getScanList();
     solrClientApiExec = solrSubScan.getSolrPlugin().getSolrClientApiExec();
     solrClient = solrSubScan.getSolrPlugin().getSolrClient();
-    useSolrStream = solrSubScan.getSolrPlugin().getSolrStorageConfig()
-        .getSolrStorageProperties().isUseSolrStream();
+    useSolrStream = solrSubScan.getSolrPlugin().getSolrStorageConfig().getSolrStorageProperties().isUseSolrStream();
 
     String solrCoreName = scanList.get(0).getSolrCoreName();
     List<SchemaPath> colums = config.getColumns();
 
-    List<String> responseFieldList = config.getSolrScanSpec()
-        .getResponseFieldList();
+    List<String> responseFieldList = config.getSolrScanSpec().getResponseFieldList();
 
-    Integer solrDocFetchCount = solrSubScan.getSolrScanSpec()
-        .getSolrDocFetchCount();
+    Integer solrDocFetchCount = solrSubScan.getSolrScanSpec().getSolrDocFetchCount();
     SolrSchemaPojo oCVSchema = config.getSolrScanSpec().getCvSchema(); // solr core
-                                                                 // schema
+    // schema
 
     if (oCVSchema.getSchemaFields() != null) {
-      schemaFieldMap = new HashMap<String, SolrSchemaField>(oCVSchema
-          .getSchemaFields().size());
+      schemaFieldMap = new HashMap<String, SolrSchemaField>(oCVSchema.getSchemaFields().size());
 
       for (SolrSchemaField cvSchemaField : oCVSchema.getSchemaFields()) {
         if (!cvSchemaField.isSkipdelete()) {
@@ -133,13 +142,10 @@ public class SolrRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  protected Collection<SchemaPath> transformColumns(
-      Collection<SchemaPath> projectedColumns) {
+  protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projectedColumns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     if (!isStarQuery()) {
-      logger
-          .debug(" This is not a star query, restricting response to projected columns only "
-              + projectedColumns);
+      logger.debug(" This is not a star query, restricting response to projected columns only " + projectedColumns);
       fields = Lists.newArrayListWithExpectedSize(projectedColumns.size());
       for (SchemaPath column : projectedColumns) {
         String fieldName = column.getRootSegment().getPath();
@@ -160,8 +166,7 @@ public class SolrRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(OperatorContext context, OutputMutator output)
-      throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     logger.debug("SolrRecordReader :: setup");
 
     // SolrDocument solrDocument = solrDocList.get(0);
@@ -174,47 +179,42 @@ public class SolrRecordReader extends AbstractRecordReader {
         Preconditions.checkNotNull(cvSchemaField);
 
         switch (cvSchemaField.getType()) {
-        case "string":
-          t = MajorType.newBuilder().setMinorType(MinorType.VARCHAR);
-          m_field = MaterializedField.create(field, t.build());
-          vectors.put(field,
-              output.addField(m_field, NullableVarCharVector.class));
-          break;
-        case "long":
-        case "tlong":
-        case "rounded1024":
-        case "double":
-        case "tdouble":
-          t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.BIGINT);
-          m_field = MaterializedField.create(field, t.build());
-          vectors.put(field,
-              output.addField(m_field, NullableBigIntVector.class));
-          break;
-        case "int":
-          t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.INT);
-          m_field = MaterializedField.create(field, t.build());
-          vectors.put(field, output.addField(m_field, NullableIntVector.class));
-          break;
-        case "float":
-          t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FLOAT8);
-          m_field = MaterializedField.create(field, t.build());
-          vectors.put(field, output.addField(m_field, Float8Vector.class));
-          break;
-        case "date":
-        case "tdate":
-        case "timestamp":
-          t = MajorType.newBuilder().setMinorType(
-              TypeProtos.MinorType.TIMESTAMP);
-          m_field = MaterializedField.create(field, t.build());
-          vectors.put(field,
-              output.addField(m_field, NullableTimeStampVector.class));
-          break;
-        default:
-          t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR);
-          m_field = MaterializedField.create(field, t.build());
-          vectors.put(field,
-              output.addField(m_field, NullableVarCharVector.class));
-          break;
+          case "string":
+            t = MajorType.newBuilder().setMinorType(MinorType.VARCHAR);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.put(field, output.addField(m_field, NullableVarCharVector.class));
+            break;
+          case "long":
+          case "tlong":
+          case "rounded1024":
+          case "double":
+          case "tdouble":
+            t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.BIGINT);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.put(field, output.addField(m_field, NullableBigIntVector.class));
+            break;
+          case "int":
+            t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.INT);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.put(field, output.addField(m_field, NullableIntVector.class));
+            break;
+          case "float":
+            t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FLOAT8);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.put(field, output.addField(m_field, Float8Vector.class));
+            break;
+          case "date":
+          case "tdate":
+          case "timestamp":
+            t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.TIMESTAMP);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.put(field, output.addField(m_field, NullableTimeStampVector.class));
+            break;
+          default:
+            t = MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR);
+            m_field = MaterializedField.create(field, t.build());
+            vectors.put(field, output.addField(m_field, NullableVarCharVector.class));
+            break;
         }
 
       }
@@ -232,10 +232,8 @@ public class SolrRecordReader extends AbstractRecordReader {
       logger.debug("SolrRecordReader :: next");
       SolrFilterParam filters = solrSubScan.getSolrScanSpec().getFilter();
       String solrCoreName = solrSubScan.getSolrScanSpec().getSolrCoreName();
-      String uniqueKey = solrSubScan.getSolrScanSpec().getCvSchema()
-          .getUniqueKey();
-      Integer solrDocFetchCount = solrSubScan.getSolrScanSpec()
-          .getSolrDocFetchCount();
+      String uniqueKey = solrSubScan.getSolrScanSpec().getCvSchema().getUniqueKey();
+      Integer solrDocFetchCount = solrSubScan.getSolrScanSpec().getSolrDocFetchCount();
       StringBuilder sb = new StringBuilder();
       if (filters != null) {
         for (String filter : filters) {
@@ -244,9 +242,7 @@ public class SolrRecordReader extends AbstractRecordReader {
       }
 
       if (useSolrStream) {
-        SolrStream solrStream = solrClientApiExec.getSolrStreamResponse(
-            solrServerUrl, solrClient, solrCoreName, this.fields, sb,
-            uniqueKey, solrDocFetchCount);
+        SolrStream solrStream = solrClientApiExec.getSolrStreamResponse(solrServerUrl, solrClient, solrCoreName, this.fields, sb, uniqueKey, solrDocFetchCount);
 
         try {
           solrStream.open();
@@ -267,17 +263,14 @@ public class SolrRecordReader extends AbstractRecordReader {
             counter++;
           }
         } catch (Exception e) {
-          logger.info("error occured while fetching results from solr server "
-              + e.getMessage());
+          logger.info("error occured while fetching results from solr server " + e.getMessage());
           return 0;
         } finally {
           try {
             solrStream.close();
             solrStream = null;
           } catch (IOException e) {
-            logger
-                .debug("error occured while fetching results from solr server "
-                    + e.getMessage());
+            logger.debug("error occured while fetching results from solr server " + e.getMessage());
           }
         }
       } else {
@@ -292,15 +285,7 @@ public class SolrRecordReader extends AbstractRecordReader {
          */
 
 
-
-        QueryResponse solrDocList = solrClientApiExec.getSolrDocs(
-          solrServerUrl,
-          solrCoreName,
-          uniqueKey,
-          fields,
-          solrDocFetchCount,
-          sb,
-          null, false); // solr
+        QueryResponse solrDocList = solrClientApiExec.getSolrDocs(solrServerUrl, solrCoreName, uniqueKey, fields, solrDocFetchCount, sb, null, false); // solr
         // docs
 
         logger.info("SolrRecordReader:: solrDocList:: " + solrDocList.getResults().size());
@@ -324,8 +309,7 @@ public class SolrRecordReader extends AbstractRecordReader {
     return counter > 0 ? counter : 0;
   }
 
-  private void processRecord(ValueVector vv, Object fieldValue,
-      int recordCounter) {
+  private void processRecord(ValueVector vv, Object fieldValue, int recordCounter) {
     String fieldValueStr = null;
     byte[] record = null;
     try {
@@ -349,8 +333,7 @@ public class SolrRecordReader extends AbstractRecordReader {
         try {
           dtime = dateParser.parse(fieldValueStr).getTime();
         } catch (Exception e) {
-          logger.trace(" Unable to format the date recieved..."
-              + e.getMessage());
+          logger.trace(" Unable to format the date recieved..." + e.getMessage());
         }
         v.getMutator().setSafe(recordCounter, dtime);
       } else if (vv.getClass().equals(NullableTimeStampVector.class)) {
@@ -366,8 +349,7 @@ public class SolrRecordReader extends AbstractRecordReader {
           dtime = dateParser.parse(fieldValueStr).getTime();
           // dtime = dtf.parseMillis(fieldValueStr);
         } catch (Exception e) {
-          logger
-              .debug("Unable to format the date recieved..." + e.getMessage());
+          logger.debug("Unable to format the date recieved..." + e.getMessage());
         }
         v.getMutator().setSafe(recordCounter, dtime);
       }

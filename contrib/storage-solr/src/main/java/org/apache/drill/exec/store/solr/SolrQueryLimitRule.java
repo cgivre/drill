@@ -39,10 +39,7 @@ public class SolrQueryLimitRule extends StoragePluginOptimizerRule {
     super(operand, description);
   }
 
-  public static final StoragePluginOptimizerRule LIMIT_ON_SCAN = new SolrQueryLimitRule(
-      RelOptHelper.some(DrillLimitRel.class,
-          RelOptHelper.any(DrillScanRel.class)),
-      "SolrQueryLimitRule:Limit_On_Scan") {
+  public static final StoragePluginOptimizerRule LIMIT_ON_SCAN = new SolrQueryLimitRule(RelOptHelper.some(DrillLimitRel.class, RelOptHelper.any(DrillScanRel.class)), "SolrQueryLimitRule:Limit_On_Scan") {
     @Override
     public void onMatch(RelOptRuleCall call) {
       logger.trace("SolrQueryLimitRule :: onMatch");
@@ -60,26 +57,19 @@ public class SolrQueryLimitRule extends StoragePluginOptimizerRule {
       return false;
     }
 
-    protected void doOnMatch(RelOptRuleCall call, DrillLimitRel limitRel,
-        DrillScanRel scanRel) {
+    protected void doOnMatch(RelOptRuleCall call, DrillLimitRel limitRel, DrillScanRel scanRel) {
       SolrGroupScan solrGroupScan = (SolrGroupScan) scanRel.getGroupScan();
       RexNode fetch = limitRel.getFetch();
       if (solrGroupScan.getSolrScanSpec() == null) {
         return;
       }
-      solrGroupScan.getSolrScanSpec().setSolrDocFetchCount(
-          Integer.parseInt(fetch.toString()));
+      solrGroupScan.getSolrScanSpec().setSolrDocFetchCount(Integer.parseInt(fetch.toString()));
 
       call.transformTo(scanRel);
     }
   };
 
-  public static final StoragePluginOptimizerRule LIMIT_ON_PROJECT = new SolrQueryLimitRule(
-      RelOptHelper.some(
-          DrillLimitRel.class,
-          RelOptHelper.some(DrillProjectRel.class,
-              RelOptHelper.any(DrillScanRel.class))),
-      "SolrQueryLimitRule:Limit_On_Project") {
+  public static final StoragePluginOptimizerRule LIMIT_ON_PROJECT = new SolrQueryLimitRule(RelOptHelper.some(DrillLimitRel.class, RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(DrillScanRel.class))), "SolrQueryLimitRule:Limit_On_Project") {
     @Override
     public void onMatch(RelOptRuleCall call) {
       logger.trace("SolrQueryLimitRule :: onMatch");
@@ -98,39 +88,31 @@ public class SolrQueryLimitRule extends StoragePluginOptimizerRule {
       return false;
     }
 
-    protected void doOnMatch(RelOptRuleCall call, DrillLimitRel limitRel,
-        DrillProjectRel projectRel, DrillScanRel scanRel) {
+    protected void doOnMatch(RelOptRuleCall call, DrillLimitRel limitRel, DrillProjectRel projectRel, DrillScanRel scanRel) {
 
       DrillRel inputRel = projectRel != null ? projectRel : scanRel;
       SolrGroupScan solrGroupScan = (SolrGroupScan) scanRel.getGroupScan();
       RexNode fetch = limitRel.getFetch();
-      if (solrGroupScan.getSolrScanSpec() == null)
-        return;
+      if (solrGroupScan.getSolrScanSpec() == null) return;
 
       if (fetch != null && fetch.isA(SqlKind.LITERAL)) {
         RexLiteral l = (RexLiteral) fetch;
         switch (l.getTypeName()) {
-        case BIGINT:
-        case INTEGER:
-        case DECIMAL:
-          Integer limit = Integer.parseInt(l.getValue2().toString());
-          solrGroupScan.getSolrScanSpec().setSolrDocFetchCount(limit);
-          break;
+          case BIGINT:
+          case INTEGER:
+          case DECIMAL:
+            Integer limit = Integer.parseInt(l.getValue2().toString());
+            solrGroupScan.getSolrScanSpec().setSolrDocFetchCount(limit);
+            break;
         }
       }
 
-      SolrGroupScan newGroupScan = new SolrGroupScan(
-          solrGroupScan.getUserName(), solrGroupScan.getSolrPlugin(),
-          solrGroupScan.getSolrScanSpec(), solrGroupScan.getColumns());
+      SolrGroupScan newGroupScan = new SolrGroupScan(solrGroupScan.getUserName(), solrGroupScan.getSolrPlugin(), solrGroupScan.getSolrScanSpec(), solrGroupScan.getColumns());
 
-      DrillScanRel newScanRel = new DrillScanRel(scanRel.getCluster(), scanRel
-          .getTraitSet().plus(DrillRel.DRILL_LOGICAL), scanRel.getTable(),
-          newGroupScan, scanRel.getRowType(), scanRel.getColumns());
+      DrillScanRel newScanRel = new DrillScanRel(scanRel.getCluster(), scanRel.getTraitSet().plus(DrillRel.DRILL_LOGICAL), scanRel.getTable(), newGroupScan, scanRel.getRowType(), scanRel.getColumns());
 
       if (projectRel != null) {
-        DrillProjectRel newProjectRel = DrillProjectRel.create(
-            projectRel.getCluster(), projectRel.getTraitSet(), newScanRel,
-            projectRel.getProjects(), projectRel.getRowType());
+        DrillProjectRel newProjectRel = DrillProjectRel.create(projectRel.getCluster(), projectRel.getTraitSet(), newScanRel, projectRel.getProjects(), projectRel.getRowType());
         inputRel = newProjectRel;
       } else {
         inputRel = newScanRel;
