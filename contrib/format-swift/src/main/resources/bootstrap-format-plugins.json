@@ -1,0 +1,37 @@
+{
+  "storage": {
+    "dfs": {
+      "type": "file",
+      "formats": {
+        "swift": {
+          "type": "swift",
+          "extensions": [
+            "fin"
+          ]
+        }
+      }
+    },
+    "cp": {
+      "type": "file",
+      "formats": {
+        "swift": {
+          "type": "swift",
+          "extensions": [
+            "fin"
+          ]
+        }
+      }
+    },
+    "s3": {
+      "type": "file",
+      "formats": {
+        "swift": {
+          "type": "swift",
+          "extensions": [
+            "fin"
+          ]
+        }
+      }
+    }
+  }
+}
