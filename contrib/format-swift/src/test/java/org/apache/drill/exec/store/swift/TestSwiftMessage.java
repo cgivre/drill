@@ -76,10 +76,10 @@ public class TestSwiftMessage extends ClusterTest {
 
   @Test
   public void testSerDe() throws Exception {
-    String sql = "SELECT COUNT(*) FROM dfs.`spss/testdata.sav`";
+    String sql = "SELECT COUNT(*) FROM dfs.`messages/MT103.fin`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
-    assertEquals("Counts should match", 25L, cnt);
+    assertEquals("Counts should match", 1L, cnt);
   }
 
   @Test
