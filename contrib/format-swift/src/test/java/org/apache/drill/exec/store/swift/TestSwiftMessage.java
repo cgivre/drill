@@ -34,8 +34,8 @@ import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
+import static org.junit.Assert.assertEquals;
 
 @Category(RowSetTests.class)
 public class TestSwiftMessage extends ClusterTest {
@@ -54,24 +54,36 @@ public class TestSwiftMessage extends ClusterTest {
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
-    results.print();
 
-
-    /*TupleMetadata expectedSchema = new SchemaBuilder()
-      .addNullable("ID", TypeProtos.MinorType.FLOAT8)
-      .addNullable("Urban", TypeProtos.MinorType.FLOAT8)
-      .addNullable("Urban_value", TypeProtos.MinorType.VARCHAR)
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("message_name", TypeProtos.MinorType.VARCHAR)
+      .addNullable("application_id", TypeProtos.MinorType.VARCHAR)
+      .addNullable("logical_terminal_address", TypeProtos.MinorType.VARCHAR)
+      .addNullable("session_number", TypeProtos.MinorType.VARCHAR)
+      .addNullable("sequence_number", TypeProtos.MinorType.VARCHAR)
+      .addNullable("message_type", TypeProtos.MinorType.INT)
+      .addNullable("Sender's Reference", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Time Indication", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Bank Operation Code", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Instruction Code", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Value Date/Currency/Interbank Settled Amount", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Currency/Instructed Amount", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Ordering Customer", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Ordering Institution", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Sender's Correspondent", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Account With Institution", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Beneficiary Customer", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Details of Charges", TypeProtos.MinorType.VARCHAR)
+      .addNullable("Sender to Receiver Information", TypeProtos.MinorType.VARCHAR)
       .buildSchema();
 
-
-    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow(47.0, 1.0, "Urban").addRow(53.0, 1.0, "Urban")
-      .addRow(66.0, 1.0, "Urban")
-      .build();*/
+    RowSet expected =  new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("103", "F", "BICFOOYYAXXX", "8683", "497519", 103, "0061350113089908", "RNCTIME 15:34 + 0000", "CRED", "SDVA", "EUR 100,000.00 28/10/2006", "EUR 100,000", "AGENTES DE BOLSA FOO AGENCIA", "2337 FOOAESMMXXX", "FOOAESMMXXX", "BICFOOYYXXX", "ES0123456789012345671234 FOO AGENTES DE BOLSA ASOC", "OUR", "/BNF/TRANSF. BCO. FOO")
+      .build();
 
     assertEquals(1, results.rowCount());
 
-    //new RowSetComparison(expected).verifyAndClearAll(results);
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test

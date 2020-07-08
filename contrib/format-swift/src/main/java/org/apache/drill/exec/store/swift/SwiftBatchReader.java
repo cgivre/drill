@@ -134,12 +134,10 @@ public class SwiftBatchReader implements ManagedReader<FileSchemaNegotiator> {
       messageTypeIntWriter.setInt(messageType);
       messageNameWriter.setString(message.getMessageType());
 
-
-
       // Parse out fields unique to each message type
       for (Field field : message.getFields()) {
         String fieldName = Field.getLabel(field.getName(), message.getMessageType(), null);
-        String fieldValue = field.getValueDisplay();
+        String fieldValue = field.getValueDisplay().trim();
         writeStringColumn(rowWriter, fieldName, fieldValue);
       }
 

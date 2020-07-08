@@ -62,8 +62,8 @@ public class SwiftFormatPlugin extends EasyFormatPlugin<SwiftFormatConfig> {
     config.extensions = pluginConfig.getExtensions();
     config.fsConf = fsConf;
     config.defaultName = DEFAULT_NAME;
-    config.readerOperatorType = UserBitShared.CoreOperatorType.SPSS_SUB_SCAN_VALUE;
-    config.useEnhancedScan = true;
+    config.readerOperatorType = UserBitShared.CoreOperatorType.SPSS_SUB_SCAN_VALUE;  // TODO Fix this...
+    config.useEnhancedScan = true;  // TODO Add Limit Pushdown
     return config;
   }
 
