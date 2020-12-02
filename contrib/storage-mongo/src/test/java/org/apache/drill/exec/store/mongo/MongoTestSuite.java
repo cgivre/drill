@@ -69,7 +69,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RunWith(Suite.class)
 @SuiteClasses({TestMongoFilterPushDown.class, TestMongoProjectPushDown.class,
     TestMongoQueries.class, TestMongoChunkAssignment.class,
-    TestMongoStoragePluginUsesCredentialsStore.class})
+    TestMongoStoragePluginUsesCredentialsStore.class, TestMongoLimitPushDown.class})
 @Category({SlowTest.class, MongoStorageTest.class})
 public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
