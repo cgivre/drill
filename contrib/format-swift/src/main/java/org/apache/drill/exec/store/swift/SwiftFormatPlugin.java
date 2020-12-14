@@ -31,6 +31,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+import org.apache.drill.exec.store.swift.SwiftBatchReader.SwiftReaderConfig;
 import org.apache.hadoop.conf.Configuration;
 
 
@@ -39,10 +40,14 @@ public class SwiftFormatPlugin extends EasyFormatPlugin<SwiftFormatConfig> {
   protected static final String DEFAULT_NAME = "swift";
 
   private static class SwiftReaderFactory extends FileReaderFactory {
+    private final EasySubScan scan;
+    public SwiftReaderFactory(EasySubScan scan) {
+      this.scan = scan;
+    }
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new SwiftBatchReader();
+      return new SwiftBatchReader(scan);
     }
   }
 
@@ -63,20 +68,21 @@ public class SwiftFormatPlugin extends EasyFormatPlugin<SwiftFormatConfig> {
     config.fsConf = fsConf;
     config.defaultName = DEFAULT_NAME;
     config.readerOperatorType = UserBitShared.CoreOperatorType.SPSS_SUB_SCAN_VALUE;  // TODO Fix this...
-    config.useEnhancedScan = true;  // TODO Add Limit Pushdown
+    config.useEnhancedScan = true;
+    config.supportsLimitPushdown = true;
     return config;
   }
 
   @Override
   public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
     EasySubScan scan, OptionManager options)  {
-    return new SwiftBatchReader();
+    return new SwiftBatchReader(scan);
   }
 
   @Override
   protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new SwiftReaderFactory());
+    builder.setReaderFactory(new SwiftReaderFactory(scan));
 
     initScanBuilder(builder, scan);
     builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));

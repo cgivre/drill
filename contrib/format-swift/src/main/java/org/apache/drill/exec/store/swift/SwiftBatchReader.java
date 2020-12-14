@@ -32,6 +32,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
@@ -57,6 +58,7 @@ public class SwiftBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private ScalarWriter logicalTerminalAddressWriter;
   private ScalarWriter sessionNumberWriter;
   private ScalarWriter sequenceNumberWriter;
+  private final int maxRecords;
 
   public static class SwiftReaderConfig {
     protected final SwiftFormatPlugin plugin;
@@ -66,6 +68,10 @@ public class SwiftBatchReader implements ManagedReader<FileSchemaNegotiator> {
       this.plugin = plugin;
       this.showFieldCodes = plugin.getConfig().getIncludeFieldCodes();
     }
+  }
+
+  public SwiftBatchReader(EasySubScan scan) {
+    this.maxRecords = scan.getMaxRecords();
   }
 
   @Override
@@ -119,6 +125,8 @@ public class SwiftBatchReader implements ManagedReader<FileSchemaNegotiator> {
       // Case for empty message
       if (message == null) {
         return false;
+      } else if (rowWriter.limitReached(maxRecords)) {
+        return false;
       }
 
       rowWriter.start();
@@ -160,8 +168,6 @@ public class SwiftBatchReader implements ManagedReader<FileSchemaNegotiator> {
     logicalTerminalAddressWriter = rowWriter.scalar("logical_terminal_address");
     sessionNumberWriter = rowWriter.scalar("session_number");
     sequenceNumberWriter = rowWriter.scalar("sequence_number");
-
-
   }
 
   private TupleMetadata buildSchema(SchemaBuilder builder) {
