@@ -18,28 +18,21 @@
 
 package org.apache.drill.exec.store.solr;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfig;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Objects;
 
 @JsonTypeName(SolrStoragePluginConfig.NAME)
 public class SolrStoragePluginConfig extends StoragePluginConfig {
   public static final String NAME = "solr";
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SolrStoragePluginConfig.class);
 
-  static final Logger logger = LoggerFactory.getLogger(SolrStoragePluginConfig.class);
-
-  @JsonProperty
-  private String solrServer = "";
-
-  @JsonProperty
-  private String solrCoreViewWorkspace = "";
-
-  @JsonProperty
-  private SolrStorageProperties solrStorageProperties = new SolrStorageProperties();
+  private final String solrServer;
+  private final String solrCoreViewWorkspace;
+  private final SolrStorageProperties solrStorageProperties;
 
   @JsonCreator
   public SolrStoragePluginConfig(@JsonProperty("solrServer") String solrServer,
@@ -74,11 +67,23 @@ public class SolrStoragePluginConfig extends StoragePluginConfig {
       return false;
     }
     SolrStoragePluginConfig thatConfig = (SolrStoragePluginConfig) that;
-    return this.solrServer.equals(thatConfig.solrServer);
+
+    return Objects.equals(solrServer, thatConfig.solrServer) &&
+      Objects.equals(solrCoreViewWorkspace, thatConfig.solrCoreViewWorkspace) &&
+      Objects.equals(solrStorageProperties, thatConfig.solrStorageProperties);
   }
 
   @Override
   public int hashCode() {
-    return this.solrServer != null ? this.solrServer.hashCode() : 0;
+    return Objects.hash(solrServer, solrCoreViewWorkspace, solrStorageProperties);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("solrServer", solrServer)
+      .field("solrCoreViewWorkspace", solrCoreViewWorkspace)
+      .field("solrStorageProperties", solrStorageProperties)
+      .toString();
   }
 }

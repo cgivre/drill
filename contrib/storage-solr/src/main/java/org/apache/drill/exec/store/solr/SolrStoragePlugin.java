@@ -38,20 +38,16 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 public class SolrStoragePlugin extends AbstractStoragePlugin {
-  static final Logger logger = LoggerFactory.getLogger(SolrStoragePlugin.class);
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SolrStoragePlugin.class);
 
   private final SolrStoragePluginConfig solrStorageConfig;
-
   private final SolrClient solrClient;
-
   private final DrillbitContext context;
-
   private final SolrSchemaFactory schemaFactory;
-
   private SolrClientAPIExec solrClientApiExec;
 
   public SolrStoragePlugin(SolrStoragePluginConfig solrStoragePluginConfig, DrillbitContext context, String name) throws IOException {

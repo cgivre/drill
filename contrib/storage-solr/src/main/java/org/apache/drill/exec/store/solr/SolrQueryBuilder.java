@@ -106,7 +106,7 @@ public class SolrQueryBuilder extends AbstractExprVisitor<SolrScanSpec, Void, Ru
   @Override
   public SolrScanSpec visitBooleanOperator(BooleanOperator op, Void valueArg) {
     logger.debug("SolrQueryBuilder :: visitBooleanOperator");
-    List<LogicalExpression> args = op.args;
+    List<LogicalExpression> args = op.args();
     String functionName = op.getName();
     SolrScanSpec nodeScanSpec = null;
     logger.debug("functionName :: " + functionName);
@@ -137,11 +137,11 @@ public class SolrQueryBuilder extends AbstractExprVisitor<SolrScanSpec, Void, Ru
     logger.debug("SolrQueryBuilder :: visitFunctionCall");
     SolrScanSpec nodeScanSpec = null;
     String functionName = call.getName();
-    ImmutableList<LogicalExpression> args = call.args;
-    LogicalExpression nameVal = call.args.get(0);
+    ImmutableList<LogicalExpression> args = (ImmutableList<LogicalExpression>) call.args();
+    LogicalExpression nameVal = call.args().get(0);
     LogicalExpression valueVal = null;
-    if (call.args.size() >= 2) {
-      valueVal = call.args.get(1);
+    if (call.args().size() >= 2) {
+      valueVal = call.args().get(1);
     }
     if (SolrCompareFunctionProcessor.isCompareFunction(functionName)) {
       SolrCompareFunctionProcessor evaluator = SolrCompareFunctionProcessor.process(call);

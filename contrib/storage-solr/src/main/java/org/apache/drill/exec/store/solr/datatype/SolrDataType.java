@@ -26,24 +26,19 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.exec.store.RecordDataType;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class SolrDataType extends RecordDataType {
-  private static final Logger logger = LoggerFactory.getLogger(SolrDataType.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SolrDataType.class);
 
   private final List<SimpleImmutableEntry<SqlTypeName, Boolean>> types = new ArrayList<>();
 
   private final List<String> names = Lists.newArrayList();
 
-  private final SolrSchemaPojo cvSchema;
-
   private final boolean isNullable = true;
 
   public SolrDataType(SolrSchemaPojo cvSchema) {
-    this.cvSchema = cvSchema;
     for (SolrSchemaField cvSchemaField : cvSchema.getSchemaFields()) {
       if (!cvSchemaField.isSkipdelete()) {// not
         // adding
@@ -64,7 +59,8 @@ public class SolrDataType extends RecordDataType {
         } else if (solrFieldType.equals("float") || solrFieldType.equals("tfloat")) {
           types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.DECIMAL, isNullable));
         } else {
-          logger.trace(String.format("PojoDataType doesn't yet support conversions from type [%s] for field [%s].Defaulting to varchar.", solrFieldType, cvSchemaField.getFieldName()));
+          logger.debug(String.format("PojoDataType doesn't yet support conversions from type [%s] for field [%s].Defaulting to varchar.", solrFieldType,
+            cvSchemaField.getFieldName()));
           types.add(new SimpleImmutableEntry<SqlTypeName, Boolean>(SqlTypeName.VARCHAR, isNullable));
         }
       }

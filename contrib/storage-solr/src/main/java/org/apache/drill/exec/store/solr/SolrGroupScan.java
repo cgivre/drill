@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.solr;
 
 import java.util.List;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
@@ -148,6 +149,9 @@ public class SolrGroupScan extends AbstractGroupScan {
 
   @Override
   public String toString() {
-    return "SolrGroupScan [SolrScanSpec=" + solrScanSpec + ", columns=" + columns + "]";
+    return new PlanStringBuilder(this)
+      .field("SolrScanSpec", solrScanSpec)
+      .field("columns", columns)
+      .toString();
   }
 }

@@ -18,44 +18,78 @@
 
 package org.apache.drill.exec.store.solr;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.PlanStringBuilder;
+
+import java.util.Objects;
 
 public class SolrStorageProperties {
-  @JsonProperty
-  private String solrSchemaUrl = "";
-  @JsonProperty
-  private boolean createViews = false;
-  @JsonProperty
-  private int maxRowSize = 0;
-  @JsonProperty
-  private boolean useSolrStream = false;
 
-  public void setMaxRowSize(int maxRowSize) {
+  private final String solrSchemaUrl;
+  private final boolean createViews;
+  private final int maxRowSize;
+  private final boolean useSolrStream;
+
+  @JsonCreator
+  public SolrStorageProperties(
+    @JsonProperty("solrSchemaUrl") String solrSchemaUrl,
+    @JsonProperty("createViews") boolean createViews,
+    @JsonProperty("maxRowSize") int maxRowSize,
+    @JsonProperty("useSolrStream") boolean useSolrStream) {
+    this.solrSchemaUrl = solrSchemaUrl;
+    this.createViews = createViews;
     this.maxRowSize = maxRowSize;
+    this.useSolrStream = useSolrStream;
   }
 
-  public boolean isCreateViews() {
+  @JsonProperty("createViews")
+  public boolean createViews() {
     return createViews;
   }
 
-  public void setCreateViews(boolean createViews) {
-    this.createViews = createViews;
-  }
-
+  @JsonProperty("solrSchemaUrl")
   public String getSolrSchemaUrl() {
     return solrSchemaUrl;
   }
 
-  public void setSolrSchemaUrl(String solrSchemaUrl) {
-    this.solrSchemaUrl = solrSchemaUrl;
-  }
-
+  @JsonProperty("useSolrStream")
   public boolean isUseSolrStream() {
     return useSolrStream;
   }
 
-  public void setUseSolrStream(boolean useSolrStream) {
-    this.useSolrStream = useSolrStream;
+  @JsonProperty("maxRowSize")
+  public int getMaxRowSize() {
+    return maxRowSize;
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(createViews, solrSchemaUrl, useSolrStream, maxRowSize);
+  }
+
+  @Override
+  public boolean equals(Object that) {
+    if (this == that) {
+      return true;
+    } else if (that == null || getClass() != that.getClass()) {
+      return false;
+    }
+    SolrStorageProperties thatConfig = (SolrStorageProperties) that;
+
+    return Objects.equals(solrSchemaUrl, thatConfig.solrSchemaUrl) &&
+      Objects.equals(useSolrStream, thatConfig.useSolrStream) &&
+      Objects.equals(createViews, thatConfig.createViews) &&
+      Objects.equals(maxRowSize, thatConfig.maxRowSize);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("solrSchemaUrl", solrSchemaUrl)
+      .field("useSolrStream", useSolrStream)
+      .field("createViews", createViews)
+      .field("maxRowSize", maxRowSize)
+      .toString();
+  }
 }

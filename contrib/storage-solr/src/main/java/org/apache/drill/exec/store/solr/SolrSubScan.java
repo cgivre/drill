@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.solr;
 
-
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -35,18 +34,15 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
 
 public class SolrSubScan extends AbstractBase implements SubScan {
-  static final Logger logger = LoggerFactory.getLogger(SolrSubScan.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SolrSubScan.class);
 
   @JsonIgnore
-  private SolrStoragePlugin solrPlugin;
+  private final SolrStoragePlugin solrPlugin;
 
   @JsonProperty
-  private SolrStoragePluginConfig solrPluginConfig;
+  private final SolrStoragePluginConfig solrPluginConfig;
 
   private SolrScanSpec solrScanSpec;
 
@@ -67,17 +63,25 @@ public class SolrSubScan extends AbstractBase implements SubScan {
   }
 
   @JsonCreator
-  public SolrSubScan(@JacksonInject StoragePluginRegistry registry, String userName, @JsonProperty("solrPluginConfig") SolrStoragePluginConfig pluginConfig, @JsonProperty("solrScanSpec") List<SolrScanSpec> scanList, @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
+  public SolrSubScan(@JacksonInject StoragePluginRegistry registry,
+                     String userName,
+                     @JsonProperty("solrPluginConfig") SolrStoragePluginConfig pluginConfig,
+                     @JsonProperty("solrScanSpec") List<SolrScanSpec> scanList,
+                     @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     super(userName);
     logger.debug("SolrSubScan : constructor11 ::" + columns);
-    this.solrPlugin = (SolrStoragePlugin) registry.getPlugin(pluginConfig);
+    this.solrPlugin = registry.resolve(pluginConfig, SolrStoragePlugin.class);
     this.solrPluginConfig = pluginConfig;
     this.columns = columns;
     this.scanList = scanList;
     this.userName = userName;
   }
 
-  public SolrSubScan(SolrStoragePlugin plugin, String userName, SolrStoragePluginConfig pluginConfig, List<SolrScanSpec> scanList, List<SchemaPath> columns) {
+  public SolrSubScan(SolrStoragePlugin plugin,
+                     String userName,
+                     SolrStoragePluginConfig pluginConfig,
+                     List<SolrScanSpec> scanList,
+                     List<SchemaPath> columns) {
     super(userName);
     this.columns = columns;
     this.solrPlugin = plugin;
@@ -99,7 +103,7 @@ public class SolrSubScan extends AbstractBase implements SubScan {
 
   @Override
   public int getOperatorType() {
-    // TODO Auto-generated method stub
+    // TODO Fix with protobuf
     return 0;
   }
 

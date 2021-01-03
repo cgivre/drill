@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.Charsets;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -55,8 +56,6 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -65,7 +64,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import static org.apache.drill.common.expression.SchemaPath.STAR_COLUMN;
 
 public class SolrRecordReader extends AbstractRecordReader {
-  private static final Logger logger = LoggerFactory.getLogger(SolrRecordReader.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SolrRecordReader.class);
 
   private FragmentContext fc;
 
@@ -365,7 +364,6 @@ public class SolrRecordReader extends AbstractRecordReader {
 
   @Override
   public void close() {
-
+    AutoCloseables.closeSilently(solrClient);
   }
-
 }

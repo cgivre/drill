@@ -50,8 +50,7 @@ public class SolrSchemaFactory implements SchemaFactory {
    * .exec.store.SchemaConfig, org.apache.calcite.schema.SchemaPlus)
    */
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent)
-      throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     List<String> schemaPath = Lists.newArrayList();
     schemaPath.add(SolrStoragePluginConfig.NAME);
     SolrSchema schema = new SolrSchema(schemaPath, "root", solrStorage);

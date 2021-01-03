@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.solr;
 
 import java.util.List;
 import com.google.common.collect.Lists;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.exec.store.solr.schema.SolrSchemaPojo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -137,8 +138,11 @@ public class SolrScanSpec {
 
   @Override
   public String toString() {
-    return "SolrScanSpec [solrCoreName=" + solrCoreName + ", filter=" + filter
-        + ", solrDocFetchCount=" + solrDocFetchCount + " aggreegation="
-        + aggrParams + "]";
+    return new PlanStringBuilder(this)
+      .field("solrCoreName", solrCoreName)
+      .field("filter", filter)
+      .field("solrDocFetchCount", solrDocFetchCount)
+      .field("aggrParams", aggrParams)
+      .toString();
   }
 }

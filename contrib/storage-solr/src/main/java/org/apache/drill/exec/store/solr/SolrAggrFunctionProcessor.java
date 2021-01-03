@@ -57,7 +57,7 @@ public class SolrAggrFunctionProcessor implements
 
   private Object value;
   private boolean success;
-  private boolean isEqualityFn;
+  private final boolean isEqualityFn;
   private SchemaPath path;
   private String functionName;
   static final Logger logger = LoggerFactory
@@ -66,8 +66,8 @@ public class SolrAggrFunctionProcessor implements
   public static SolrAggrFunctionProcessor process(FunctionCall call) {
     String functionName = call.getName();
 
-    LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() == 2 ? call.args.get(1)
+    LogicalExpression nameArg = call.args().get(0);
+    LogicalExpression valueArg = call.args().size() == 2 ? call.args().get(1)
         : null;
     SolrAggrFunctionProcessor evaluator = new SolrAggrFunctionProcessor(
         functionName);
@@ -79,12 +79,11 @@ public class SolrAggrFunctionProcessor implements
         nameArg = swapArg;
       }
       evaluator.success = nameArg.accept(evaluator, valueArg);
-    } else if (call.args.get(0) instanceof SchemaPath) {
+    } else if (call.args().get(0) instanceof SchemaPath) {
       evaluator.success = true;
       evaluator.path = (SchemaPath) nameArg;
     }
     evaluator.functionName = AGGR_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
-
     return evaluator;
   }
 

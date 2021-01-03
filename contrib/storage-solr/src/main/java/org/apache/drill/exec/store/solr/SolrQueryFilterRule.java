@@ -55,15 +55,15 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-      final DrillFilterRel filterRel = (DrillFilterRel) call.rel(0);
-      final DrillScanRel scan = (DrillScanRel) call.rel(1);
+      final DrillFilterRel filterRel = call.rel(0);
+      final DrillScanRel scan = call.rel(1);
       doOnMatch(call, filterRel, null, scan);
 
     }
 
     @Override
     public boolean matches(RelOptRuleCall call) {
-      final DrillScanRel scan = (DrillScanRel) call.rel(1);
+      final DrillScanRel scan = call.rel(1);
       if (scan.getGroupScan() instanceof SolrGroupScan) {
         return super.matches(call);
       }
@@ -114,7 +114,6 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
       } catch (Exception e) {
 
       }
-
     }
 
     @Override
@@ -138,9 +137,9 @@ public abstract class SolrQueryFilterRule extends StoragePluginOptimizerRule {
     @Override
     public void onMatch(RelOptRuleCall call) {
       logger.debug("SolrQueryFilterRule :: onMatch :: Agg_Push_Down");
-      final DrillAggregateRel aggrRel = (DrillAggregateRel) call.rel(0);
-      final DrillProjectRel projectRel = (DrillProjectRel) call.rel(1);
-      final DrillScanRel scanRel = (DrillScanRel) call.rel(2);
+      final DrillAggregateRel aggrRel = call.rel(0);
+      final DrillProjectRel projectRel = call.rel(1);
+      final DrillScanRel scanRel = call.rel(2);
 
       // optimize the solr query for different funcType
       doOnAggrMatch(call, aggrRel, projectRel, scanRel);

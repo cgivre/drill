@@ -36,12 +36,10 @@ import org.apache.drill.exec.store.sys.StaticDrillTable;
 import org.apache.http.client.ClientProtocolException;
 
 import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SolrSchema extends AbstractSchema {
 
-  static final Logger logger = LoggerFactory.getLogger(SolrSchema.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SolrSchema.class);
 
   private final Set<String> availableSolrCores;
 
@@ -123,7 +121,7 @@ public class SolrSchema extends AbstractSchema {
   public Set<String> getTableNames() {
     logger.debug("SolrSchema :: getTableNames");
     SolrStorageProperties solrStorageConfig = this.solrStoragePlugin.getSolrStorageConfig().getSolrStorageProperties();
-    if (solrStorageConfig.isCreateViews()) {
+    if (solrStorageConfig.createViews()) {
       createORReplaceViews();
     }
     return availableSolrCores;
@@ -155,7 +153,7 @@ public class SolrSchema extends AbstractSchema {
         logger.debug("There is no cores in the current solr server : " + solrServerUrl);
       }
 
-    } catch (ClientProtocolException e) {
+    } catch (ClientProtocolException e ) {
       logger.debug("creating view failed : " + e.getMessage());
     } catch (IOException e) {
       logger.debug("creating view failed : " + e.getMessage());
