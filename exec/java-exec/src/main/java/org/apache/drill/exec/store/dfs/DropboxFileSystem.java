@@ -25,21 +25,22 @@ import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PositionedReadable;
+import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ public class DropboxFileSystem extends FileSystem {
   private static final String ERROR_MSG = "Dropbox is read only.";
   private Path workingDirectory;
   private DbxClientV2 client;
+  private FileStatus[] fileStatuses;
 
 
   @Override
@@ -68,26 +70,19 @@ public class DropboxFileSystem extends FileSystem {
 
   @Override
   public FSDataInputStream open(Path path, int bufferSize) throws IOException {
-    FSDataInputStream fis = null;
-    String file = getFileName(path);
-    DbxClientV2 client = getClient();
-    PipedOutputStream outputStream = null;
-
+    FSDataInputStream fsDataInputStream = null;
+    String filename = getFileName(path);
+    client = getClient();
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
     try {
-      outputStream = new PipedOutputStream();
-      client.files().download(file).download(outputStream);
-      PipedInputStream input = new PipedInputStream(outputStream);
-
-      fis = new FSDataInputStream(input);
-
-    } catch (DbxException | IOException ex) {
-      ex.printStackTrace();
-    } finally {
-      IOUtils.closeQuietly(outputStream);
+      client.files().download(filename).download(out);
+      fsDataInputStream = new FSDataInputStream(new SeekableByteArrayInputStream(out.toByteArray()));
+    } catch (DbxException e) {
+      throw new IOException(e.getMessage());
     }
-
-    return fis;
+    return fsDataInputStream;
   }
+
 
   @Override
   public FSDataOutputStream create(Path f,
@@ -118,28 +113,33 @@ public class DropboxFileSystem extends FileSystem {
   @Override
   public FileStatus[] listStatus(Path path) throws FileNotFoundException, IOException {
     client = getClient();
-    // Get files and folder metadata from Dropbox root directory
     List<FileStatus> fileStatusList = new ArrayList<>();
 
+    // TODO Cache this so that we don't have to do this multiple times.
+
+    // Get files and folder metadata from Dropbox root directory
     try {
       ListFolderResult result = client.files().listFolder("");
       while (true) {
         for (Metadata metadata : result.getEntries()) {
-
-          System.out.println(metadata.getPathLower());
+          fileStatusList.add(getFileInformation(metadata));
         }
-
         if (!result.getHasMore()) {
           break;
         }
-
         result = client.files().listFolderContinue(result.getCursor());
       }
-    } catch (Exception e) {
-
+    } catch (DbxException e) {
+      throw new IOException(e.getMessage());
     }
 
-    return (FileStatus[]) fileStatusList.toArray();
+    // Convert to Array
+    fileStatuses = new FileStatus[fileStatusList.size()];
+    for (int i = 0; i < fileStatusList.size(); i++) {
+      fileStatuses[i] = fileStatusList.get(i);
+    }
+
+    return fileStatuses;
   }
 
   @Override
@@ -161,17 +161,12 @@ public class DropboxFileSystem extends FileSystem {
   public FileStatus getFileStatus(Path path) throws IOException {
     String filePath  = Path.getPathWithoutSchemeAndAuthority(path).toString();
 
-    // Remove trailing slash
-    //if ((!filePath.isEmpty()) && filePath.endsWith("/")) {
-      //filePath = filePath.substring(0, filePath.length() -1);
-    //}
-
     logger.debug("Getting metadata for file at {}", filePath);
     client = getClient();
     boolean isDirectory;
     try {
       ListFolderResult listFolder = client.files().listFolder("");
-      Metadata metadata = client.files().getMetadata("http-pcap.json");
+      Metadata metadata = client.files().getMetadata("/http-pcap.json");
 
       isDirectory = isDirectory(metadata);
       if (isDirectory) {
@@ -183,6 +178,16 @@ public class DropboxFileSystem extends FileSystem {
       }
     } catch (Exception e) {
       throw new IOException("Error accessing file " + path.getName());
+    }
+  }
+
+  private FileStatus getFileInformation(Metadata metadata) {
+    if (isDirectory(metadata)) {
+      // TODO Get size and mod date of directories
+      return new FileStatus(0, true, 1, 0, 0, new Path(metadata.getPathLower()));
+    } else {
+      FileMetadata fileMetadata = (FileMetadata) metadata;
+      return new FileStatus(fileMetadata.getSize(), false, 1, 0, fileMetadata.getClientModified().getTime(), new Path(metadata.getPathLower()));
     }
   }
 
@@ -205,10 +210,60 @@ public class DropboxFileSystem extends FileSystem {
   }
 
   private String getFileName(Path path){
-    String file = path.toUri().getPath();
-    if(file.charAt(0) == '/'){
-      file = file.substring(1);
+    return path.toUri().getPath();
+  }
+
+  static class SeekableByteArrayInputStream extends ByteArrayInputStream implements Seekable, PositionedReadable {
+
+    public SeekableByteArrayInputStream(byte[] buf)
+    {
+      super(buf);
     }
-    return file;
+    @Override
+    public long getPos() throws IOException{
+      return pos;
+    }
+
+    @Override
+    public void seek(long pos) throws IOException {
+      if (mark != 0)
+        throw new IllegalStateException();
+
+      reset();
+      long skipped = skip(pos);
+
+      if (skipped != pos)
+        throw new IOException();
+    }
+
+    @Override
+    public boolean seekToNewSource(long targetPos) throws IOException {
+      return false;
+    }
+
+    @Override
+    public int read(long position, byte[] buffer, int offset, int length) throws IOException {
+
+      if (position >= buf.length)
+        throw new IllegalArgumentException();
+      if (position + length > buf.length)
+        throw new IllegalArgumentException();
+      if (length > buffer.length)
+        throw new IllegalArgumentException();
+
+      System.arraycopy(buf, (int) position, buffer, offset, length);
+      return length;
+    }
+
+    @Override
+    public void readFully(long position, byte[] buffer) throws IOException {
+      read(position, buffer, 0, buffer.length);
+
+    }
+
+    @Override
+    public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
+      read(position, buffer, offset, length);
+    }
   }
 }

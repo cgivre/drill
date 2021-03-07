@@ -156,6 +156,12 @@
     "dropbox" : {
       "type" : "file",
       "connection" : "dropbox:///",
+      "workspaces" : {
+        "root" : {
+          "location" : "/",
+          "writable" : false
+        }
+      },
       "formats" : {
         "csv" : {
           "type" : "text",
