@@ -305,6 +305,11 @@
             </dependency>
  -->
             <dependency>
+              <groupId>com.dropbox.core</groupId>
+              <artifactId>dropbox-core-sdk</artifactId>
+              <version>3.1.5</version>
+            </dependency>
+            <dependency>
               <groupId>com.github.tomakehurst</groupId>
               <artifactId>wiremock-standalone</artifactId>
               <version>${wiremock.standalone.version}</version>

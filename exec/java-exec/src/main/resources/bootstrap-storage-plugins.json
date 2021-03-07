@@ -152,6 +152,42 @@
         }
       },
       "enabled" : true
+    },
+    "dropbox" : {
+      "type" : "file",
+      "connection" : "dropbox:///",
+      "formats" : {
+        "csv" : {
+          "type" : "text",
+          "extensions" : [ "csv" ],
+          "fieldDelimiter" : ","
+        },
+        "tsv" : {
+          "type" : "text",
+          "extensions" : [ "tsv" ],
+          "fieldDelimiter" : "\t"
+        },
+        "json" : {
+          "type" : "json",
+          "extensions" : [ "json" ]
+        },
+        "pcap" : {
+          "type" : "pcap"
+        },
+        "parquet" : {
+          "type" : "parquet"
+        },
+        "avro" : {
+          "type" : "avro"
+        },
+        "csvh" : {
+          "type" : "text",
+          "extensions" : [ "csvh" ],
+          "fieldDelimiter" : ",",
+          "extractHeader" : true
+        }
+      },
+      "enabled" : true
     }
   }
 }
