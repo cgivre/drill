@@ -23,4 +23,11 @@ public class DropboxFileSystemTest extends ClusterTest {
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     results.print();
   }
+
+  @Test
+  public void testQuery() throws Exception {
+    String sql = "SELECT * FROM dropbox.`http-pcap.json`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
+  }
 }

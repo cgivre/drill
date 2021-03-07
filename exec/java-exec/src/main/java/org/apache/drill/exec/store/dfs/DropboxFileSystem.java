@@ -33,29 +33,28 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
-import org.apache.parquet.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DropboxFileSystem extends FileSystem {
   private static final Logger logger = LoggerFactory.getLogger(DropboxFileSystem.class);
-  private static final String ACCESS_TOKEN = "sl" +
-    ".AsNCj1AGxUJd8yY8iKf_NULLf7RM4h1GX1bBiRc_t5QjFhlHqIiKRzsH15Zcu9DRBVQ9S0B7eoArqeRGpD3Z_e1TCbJRipQo7CPlnn311iQAbFTZUgGnTIt2hV4pvVx1c6hhBIo";
+
+  // TODO Get this from the config or password vault
+  private static final String ACCESS_TOKEN = "e9aB6wxgt6kAAAAAAAAAAayiv0u56eRpMeioVAiHIunhH2SuJoadXFxMKSjlZVTk";
 
 
   private static final String ERROR_MSG = "Dropbox is read only.";
   private Path workingDirectory;
+  private DbxClientV2 client;
 
 
   @Override
@@ -69,22 +68,17 @@ public class DropboxFileSystem extends FileSystem {
 
   @Override
   public FSDataInputStream open(Path path, int bufferSize) throws IOException {
-    FSDataInputStream fis;
+    FSDataInputStream fis = null;
     String file = getFileName(path);
     DbxClientV2 client = getClient();
-    FileOutputStream outputStream = null;
+    PipedOutputStream outputStream = null;
 
     try {
-      outputStream = new FileOutputStream(outputFile);
+      outputStream = new PipedOutputStream();
       client.files().download(file).download(outputStream);
-      FileChannel outputChannel = outputStream.getChannel();
+      PipedInputStream input = new PipedInputStream(outputStream);
 
-
-      fis = new FSDataInputStream(inputFile);
-      FileChannel inputChannel = fis.getChannel();
-
-      //Transfer from output stream to input stream is happening here
-      outputChannel.transferTo(0, inputChannel.size(), inputChannel);
+      fis = new FSDataInputStream(input);
 
     } catch (DbxException | IOException ex) {
       ex.printStackTrace();
@@ -92,7 +86,7 @@ public class DropboxFileSystem extends FileSystem {
       IOUtils.closeQuietly(outputStream);
     }
 
-    return FSDataInputStream;
+    return fis;
   }
 
   @Override
@@ -123,7 +117,7 @@ public class DropboxFileSystem extends FileSystem {
 
   @Override
   public FileStatus[] listStatus(Path path) throws FileNotFoundException, IOException {
-    DbxClientV2 client = getClient();
+    client = getClient();
     // Get files and folder metadata from Dropbox root directory
     List<FileStatus> fileStatusList = new ArrayList<>();
 
@@ -168,16 +162,17 @@ public class DropboxFileSystem extends FileSystem {
     String filePath  = Path.getPathWithoutSchemeAndAuthority(path).toString();
 
     // Remove trailing slash
-    if ((!filePath.isEmpty()) && filePath.endsWith("/")) {
-      filePath = filePath.substring(0, filePath.length() -1);
-    }
+    //if ((!filePath.isEmpty()) && filePath.endsWith("/")) {
+      //filePath = filePath.substring(0, filePath.length() -1);
+    //}
 
     logger.debug("Getting metadata for file at {}", filePath);
-    DbxClientV2 client = getClient();
-
+    client = getClient();
     boolean isDirectory;
     try {
-      Metadata metadata = client.files().getMetadata("");
+      ListFolderResult listFolder = client.files().listFolder("");
+      Metadata metadata = client.files().getMetadata("http-pcap.json");
+
       isDirectory = isDirectory(metadata);
       if (isDirectory) {
         // TODO Get size and mod date of directories
@@ -187,13 +182,18 @@ public class DropboxFileSystem extends FileSystem {
         return new FileStatus(fileMetadata.getSize(), false, 1, 0, fileMetadata.getClientModified().getTime(), path);
       }
     } catch (Exception e) {
-      throw new IOException("Error accessing file " + filePath);
+      throw new IOException("Error accessing file " + path.getName());
     }
   }
 
   private DbxClientV2 getClient() {
+    if (this.client != null) {
+      return client;
+    }
+
     DbxRequestConfig config = DbxRequestConfig.newBuilder("datadistillr").build();
-    return new DbxClientV2(config, ACCESS_TOKEN);
+    this.client = new DbxClientV2(config, ACCESS_TOKEN);
+    return this.client;
   }
 
   private boolean isDirectory(Metadata metadata) {
