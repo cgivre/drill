@@ -49,6 +49,7 @@ import java.util.List;
 public class DropboxFileSystem extends FileSystem {
   private static final Logger logger = LoggerFactory.getLogger(DropboxFileSystem.class);
 
+
   // TODO Get this from the config or password vault
   private static final String ACCESS_TOKEN = "e9aB6wxgt6kAAAAAAAAAAayiv0u56eRpMeioVAiHIunhH2SuJoadXFxMKSjlZVTk";
 
