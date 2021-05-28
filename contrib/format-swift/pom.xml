@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>drill-format-swift</artifactId>
-  <name>contrib/format-swift</name>
+  <name>Drill : Contrib : Format : Swift</name>
 
   <dependencies>
     <dependency>
