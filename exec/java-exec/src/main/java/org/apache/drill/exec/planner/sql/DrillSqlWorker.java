@@ -246,6 +246,10 @@ public class DrillSqlWorker {
         handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
         context.setSQLStatementType(SqlStatementType.CTAS);
         break;
+      case INSERT:
+        handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
+        context.setSQLStatementType(SqlStatementType.INSERT);
+        break;
       case SELECT:
         handler = new DefaultSqlHandler(config, textPlan);
         context.setSQLStatementType(SqlStatementType.SELECT);
