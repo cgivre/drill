@@ -27,6 +27,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOrderBy;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlInsert;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.util.SqlVisitor;
 
@@ -68,7 +69,7 @@ public class CompoundIdentifierConverter extends SqlShuttle {
         .put(SqlDropTableMetadata.class, arrayOf(D, D, D))
         .put(SqlSelect.class, arrayOf(D, E, D, E, E, E, E, E, D, D))
         .put(SqlCreateTable.class, arrayOf(D, D, D, E, D, D))
-        .put(SqlInsert.class, arrayOf(D,D,E))
+        .put(SqlInsert.class, arrayOf(D,D,E,D))
         .put(SqlCreateView.class, arrayOf(D, E, E, D))
         .put(DrillSqlDescribeTable.class, arrayOf(D, D, E))
         .put(SqlDropView.class, arrayOf(D, D))

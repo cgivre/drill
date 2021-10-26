@@ -171,9 +171,11 @@ public class SqlConverter {
 
   public SqlNode parse(String sql) {
     try {
+      logger.debug("Parsing SQL: {}", sql);
       SqlParser parser = SqlParser.create(sql, parserConfig);
       return parser.parseStmt();
     } catch (SqlParseException parseError) {
+      logger.error("SqlError: {}, {}, {}", parseError.getCause(), parseError.getMessage(), parseError.getExpectedTokenNames());
       DrillSqlParseException dex = new DrillSqlParseException(sql, parseError);
       UserException.Builder builder = UserException
           .parseError(dex)

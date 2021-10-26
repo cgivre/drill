@@ -293,22 +293,6 @@ SqlNode SqlCreateTable(SqlParserPos pos, boolean isTemporary) :
     }
 }
 
-/**
-* Parses an INSERT query.
-* INSERT INTO tblName [(field1, field2, ...)] VALUES query
-*/
-SqlNode SqlInsert(SqlParserPos pos) :
-{
-  SqlIdentifier tblName;
-  SqlNodeList fieldList,
-  SqlNode query;
-}
-{
-tblName = CompoundIdentifier()
-fieldList = ParseOptionalFieldList("Table");
-query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
-return new SqlInsert(pos, tblName, fieldList, query);
-}
 
 /**
 * Parses create table schema statement after CREATE OR REPLACE SCHEMA statement

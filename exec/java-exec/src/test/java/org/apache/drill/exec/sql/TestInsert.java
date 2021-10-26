@@ -39,7 +39,7 @@ public class TestInsert extends ClusterTest {
 
   @Test
   public void testSimpleInsert() throws Exception {
-    String sql = "INSERT INTO dfs.`cars.csvh` VALUES (2018,'Alfa Romeo','Giulia','Nice!!', 50000)";
+    String sql = "INSERT INTO dfs.`cars.csvh` VALUES ('2018','Alfa Romeo','Giulia','Nice!!', '50000')";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
   }
 }

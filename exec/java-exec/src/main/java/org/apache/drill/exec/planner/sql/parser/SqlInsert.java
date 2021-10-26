@@ -77,20 +77,6 @@ public class SqlInsert extends DrillSqlCall {
   }
 
   @Override
-  public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
-    writer.keyword("INSERT");
-    writer.keyword("INTO");
-    tblName.unparse(writer, leftPrec, rightPrec);
-
-    if (fieldList.size() > 0) {
-      SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, fieldList);
-    }
-
-    query.unparse(writer, leftPrec, rightPrec);
-  }
-
-
-  @Override
   public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
     return getSqlHandler(config, null);
   }
