@@ -66,6 +66,7 @@
     <module>storage-splunk</module>
     <module>storage-http</module>
     <module>storage-druid</module>
+    <module>storage-pulsar</module>
     <module>storage-elasticsearch</module>
     <module>storage-cassandra</module>
     <module>format-iceberg</module>
