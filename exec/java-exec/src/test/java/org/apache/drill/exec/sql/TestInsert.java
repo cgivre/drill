@@ -19,9 +19,9 @@
 package org.apache.drill.exec.sql;
 
 import org.apache.drill.categories.SqlTest;
-import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +40,6 @@ public class TestInsert extends ClusterTest {
   @Test
   public void testSimpleInsert() throws Exception {
     String sql = "INSERT INTO dfs.`cars.csvh` VALUES ('2018','Alfa Romeo','Giulia','Nice!!', '50000')";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    QuerySummary results = client.queryBuilder().sql(sql).run();
   }
 }

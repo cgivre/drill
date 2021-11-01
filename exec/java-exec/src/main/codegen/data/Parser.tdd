@@ -62,6 +62,7 @@
     "SqlCreateOrReplace()"
     "SqlDropAlias()",
     "SqlDropAllAliases()",
+    "SqlInsert()"
     "SqlDrop()",
     "SqlShowFiles()",
     "SqlRefreshMetadata()",

@@ -18,9 +18,16 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.tools.RelConversionException;
+import org.apache.calcite.tools.ValidationException;
+import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.util.Pointer;
+import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class InsertHandler extends DefaultSqlHandler {
 
@@ -28,6 +35,13 @@ public class InsertHandler extends DefaultSqlHandler {
 
   public InsertHandler(SqlHandlerConfig config, Pointer<String> textPlan) {
     super(config, textPlan);
+    logger.debug("In INSERT Handler");
+  }
+
+  @Override
+  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
+    logger.debug("Getting INSERT plan");
+    return null;
   }
 
 

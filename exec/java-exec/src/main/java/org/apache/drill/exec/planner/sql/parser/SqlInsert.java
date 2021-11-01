@@ -18,10 +18,8 @@
 
 package org.apache.drill.exec.planner.sql.parser;
 
-import org.apache.calcite.sql.SqlWriter;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.handlers.InsertHandler;
-import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -107,5 +105,7 @@ public class SqlInsert extends DrillSqlCall {
     return columnNames;
   }
 
-  public SqlNode getQuery() { return query; }
+  public SqlNode getQuery() {
+    return query;
+  }
 }
