@@ -19,6 +19,7 @@
 package org.apache.drill.exec.sql;
 
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
@@ -34,12 +35,19 @@ public class TestInsert extends ClusterTest {
   @BeforeClass
   public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
-    dirTestWatcher.copyResourceToRoot(Paths.get("store/text/data"));
+    dirTestWatcher.copyResourceToRoot(Paths.get("store/text/data/"));
   }
 
   @Test
   public void testSimpleInsert() throws Exception {
-    String sql = "INSERT INTO dfs.`cars.csvh` VALUES ('2018','Alfa Romeo','Giulia','Nice!!', '50000')";
+    String sql = "INSERT INTO dfs.`store/text/data/cars.csvh` VALUES ('2018','Alfa Romeo','Giulia','Nice!!', '50000')";
     QuerySummary results = client.queryBuilder().sql(sql).run();
+  }
+
+  @Test
+  public void testCSV() throws Exception {
+    String sql = "SELECT * FROM dfs.`store/text/data/cars.csvh`";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
   }
 }
