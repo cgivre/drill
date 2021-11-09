@@ -41,7 +41,8 @@ public class TestInsert extends ClusterTest {
   @Test
   public void testSimpleInsert() throws Exception {
     String sql = "INSERT INTO dfs.`store/text/data/cars.csvh` VALUES ('2018','Alfa Romeo','Giulia','Nice!!', '50000')";
-    QuerySummary results = client.queryBuilder().sql(sql).run();
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
   }
 
   @Test

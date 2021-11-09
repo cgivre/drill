@@ -41,6 +41,7 @@ import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
+import org.apache.drill.exec.planner.sql.handlers.InsertHandler;
 import org.apache.drill.exec.planner.sql.handlers.MetastoreAnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
 import org.apache.drill.exec.planner.sql.handlers.ResetOptionHandler;
@@ -247,7 +248,7 @@ public class DrillSqlWorker {
         context.setSQLStatementType(SqlStatementType.CTAS);
         break;
       case INSERT:
-        handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
+        handler = new InsertHandler(config, textPlan);
         context.setSQLStatementType(SqlStatementType.INSERT);
         break;
       case SELECT:
