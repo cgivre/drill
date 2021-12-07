@@ -18,14 +18,16 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlInsert;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.util.Pointer;
@@ -34,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public class InsertHandler extends DefaultSqlHandler {
 
@@ -53,8 +56,11 @@ public class InsertHandler extends DefaultSqlHandler {
     final AbstractSchema drillSchema = resolveSchema(sqlInsert, config.getConverter().getDefaultSchema(), drillConfig);
     final String schemaPath = drillSchema.getFullSchemaName();
 
+    // TODO Start here... Finish plan
+
     return null;
   }
+
   /**
    * Validates if table can be created in indicated schema
    * Checks if any object (persistent table / temporary table / view) with the same name exists
@@ -89,4 +95,25 @@ public class InsertHandler extends DefaultSqlHandler {
     return true;
   }
 
+  /**
+   * Resolves schema taking into account type of table being created.
+   * If schema path wasn't indicated in sql call and table type to be created is temporary
+   * returns temporary workspace.
+   *
+   * If schema path is indicated, resolves to mutable drill schema.
+   * Though if table to be created is temporary table, checks if resolved schema is valid default temporary workspace.
+   *
+   * @param sqlInsert create table call
+   * @param defaultSchema default schema
+   * @param config drill config
+   * @return resolved schema
+   * @throws UserException if attempted to create temporary table outside of temporary workspace
+   */
+  private AbstractSchema resolveSchema(SqlInsert sqlInsert, SchemaPlus defaultSchema, DrillConfig config) {
+    AbstractSchema resolvedSchema;
+    SqlIdentifier table = (SqlIdentifier) sqlInsert.getOperandList().get(1);
+    List<String> schemaPath = SchemaUtilites.getSchemaPath(table);
+    resolvedSchema = SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, schemaPath);
+    return resolvedSchema;
+  }
 }

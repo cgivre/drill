@@ -22,7 +22,6 @@ import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
