@@ -18,20 +18,33 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlInsert;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.logical.DrillScreenRel;
+import org.apache.drill.exec.planner.logical.DrillWriterRel;
+import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,15 +63,78 @@ public class InsertHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException, ForemanSetupException {
     logger.debug("Getting INSERT plan");
+
     final SqlInsert sqlInsert = unwrap(sqlNode, SqlInsert.class);
+    final String originalTableName = DrillStringUtils.removeLeadingSlash(getTableName(sqlInsert));
+
+    final ConvertedRelNode convertedRelNode = validateAndConvert(sqlInsert.getSource());
+    final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
+    final RelNode queryRelNode = convertedRelNode.getConvertedNode();
+
+    final List<String> fieldNames = getFieldNames(sqlInsert);
+
+    final RelNode newTblRelNode =
+      SqlHandlerUtil.resolveNewTableRel(false, fieldNames, validatedRowType, queryRelNode);
+
+    // TODO Check for table existence?
 
     final DrillConfig drillConfig = context.getConfig();
     final AbstractSchema drillSchema = resolveSchema(sqlInsert, config.getConverter().getDefaultSchema(), drillConfig);
     final String schemaPath = drillSchema.getFullSchemaName();
 
-    // TODO Start here... Finish plan
+
+    // Check table creation possibility
+    if (!checkTableCreationPossibility(drillSchema, originalTableName, drillConfig, context.getSession(), schemaPath, false)) {
+      return DirectPlan.createDirectPlan(context, false,
+        String.format("A table or view with given name [%s] already exists in schema [%s]", originalTableName, schemaPath));
+    }
+
+    StorageStrategy storageStrategy = new StorageStrategy(context.getOption(ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
+    String newTableName = originalTableName;
+
+    DrillRel drel = convertToDrel(newTblRelNodeWithPCol, drillSchema, newTableName,
+      sqlCreateTable.getPartitionColumns(), newTblRelNode.getRowType(), storageStrategy);
+
 
     return null;
+  }
+
+  private DrillRel convertToDrel(RelNode relNode,
+                                 AbstractSchema schema,
+                                 String tableName,
+                                 List<String> partitionColumns,
+                                 RelDataType queryRowType,
+                                 StorageStrategy storageStrategy)
+    throws RelConversionException, SqlUnsupportedException {
+    final DrillRel convertedRelNode = convertToRawDrel(relNode);
+
+    // Put a non-trivial topProject to ensure the final output field name is preserved, when necessary.
+    // Only insert project when the field count from the child is same as that of the queryRowType.
+    final DrillRel topPreservedNameProj = queryRowType.getFieldCount() == convertedRelNode.getRowType().getFieldCount() ?
+      addRenamedProject(convertedRelNode, queryRowType) : convertedRelNode;
+
+    final RelTraitSet traits = convertedRelNode.getCluster().traitSet().plus(DrillRel.DRILL_LOGICAL);
+    final DrillWriterRel writerRel = new DrillWriterRel(convertedRelNode.getCluster(),
+      traits, topPreservedNameProj, schema.createNewTable(tableName, partitionColumns, storageStrategy));
+    return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
+  }
+
+
+
+  public String getTableName(SqlInsert sqlInsert) {
+    return sqlInsert.getTargetTable().toString();
+  }
+
+  public List<String> getFieldNames(SqlInsert sqlInsert) {
+    List<String> columnNames = Lists.newArrayList();
+    SqlNodeList targetColumnList = sqlInsert.getTargetColumnList();
+    if (targetColumnList != null) {
+      List<SqlNode> fieldList = targetColumnList.getList();
+      for (SqlNode node : fieldList) {
+        columnNames.add(node.toString());
+      }
+    }
+    return columnNames;
   }
 
   /**
