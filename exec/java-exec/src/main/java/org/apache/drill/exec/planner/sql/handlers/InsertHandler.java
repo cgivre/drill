@@ -33,9 +33,11 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.logical.DrillAppenderRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
-import org.apache.drill.exec.planner.logical.DrillWriterRel;
+import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -89,20 +91,23 @@ public class InsertHandler extends DefaultSqlHandler {
         String.format("A table or view with given name [%s] already exists in schema [%s]", originalTableName, schemaPath));
     }
 
+    // Convert the query to Drill Logical plan and insert a writer operator on top.
     StorageStrategy storageStrategy = new StorageStrategy(context.getOption(ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
     String newTableName = originalTableName;
 
-    DrillRel drel = convertToDrel(newTblRelNodeWithPCol, drillSchema, newTableName,
-      sqlCreateTable.getPartitionColumns(), newTblRelNode.getRowType(), storageStrategy);
+    DrillRel drel = convertToDrel(newTblRelNode, drillSchema, newTableName, newTblRelNode.getRowType(), storageStrategy);
+    Prel prel = convertToPrel(drel, newTblRelNode.getRowType());
 
+    PhysicalOperator pop = convertToPop(prel);
+    PhysicalPlan plan = convertToPlan(pop);
+    logger.debug("Plan: {}", plan);
 
-    return null;
+    return plan;
   }
 
   private DrillRel convertToDrel(RelNode relNode,
                                  AbstractSchema schema,
                                  String tableName,
-                                 List<String> partitionColumns,
                                  RelDataType queryRowType,
                                  StorageStrategy storageStrategy)
     throws RelConversionException, SqlUnsupportedException {
@@ -114,12 +119,9 @@ public class InsertHandler extends DefaultSqlHandler {
       addRenamedProject(convertedRelNode, queryRowType) : convertedRelNode;
 
     final RelTraitSet traits = convertedRelNode.getCluster().traitSet().plus(DrillRel.DRILL_LOGICAL);
-    final DrillWriterRel writerRel = new DrillWriterRel(convertedRelNode.getCluster(),
-      traits, topPreservedNameProj, schema.createNewTable(tableName, partitionColumns, storageStrategy));
+    final DrillAppenderRel writerRel = new DrillAppenderRel(convertedRelNode.getCluster(), traits, topPreservedNameProj);
     return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
   }
-
-
 
   public String getTableName(SqlInsert sqlInsert) {
     return sqlInsert.getTargetTable().toString();
