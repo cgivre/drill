@@ -97,10 +97,14 @@ public class InsertHandler extends DefaultSqlHandler {
 
     DrillRel drel = convertToDrel(newTblRelNode, drillSchema, newTableName, newTblRelNode.getRowType(), storageStrategy);
     Prel prel = convertToPrel(drel, newTblRelNode.getRowType());
+    logAndSetTextPlan("Drill Physical", prel, logger);
 
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
-    logger.debug("Plan: {}", plan);
+    log("Drill Plan", plan, logger);
+
+    String message = String.format("Inserting into %s table", originalTableName);
+    logger.info(message);
 
     return plan;
   }
@@ -136,6 +140,7 @@ public class InsertHandler extends DefaultSqlHandler {
         columnNames.add(node.toString());
       }
     }
+    logger.debug("Column names from Insert Handler: {}", columnNames);
     return columnNames;
   }
 
