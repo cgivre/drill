@@ -92,15 +92,14 @@ public class InsertHandler extends DefaultSqlHandler {
     final RelNode newTblRelNode =
       SqlHandlerUtil.resolveNewTableRel(false, fieldNames, validatedRowType, queryRelNode);
 
-    // TODO Check for table existence?
-
     final DrillConfig drillConfig = context.getConfig();
     final AbstractSchema drillSchema = resolveSchema(sqlInsert, config.getConverter().getDefaultSchema(), drillConfig);
     final String schemaPath = drillSchema.getFullSchemaName();
 
-
+    // TODO Somehow check to see if the file or table exists.  This method doesn't seem to work at all,
+    // so perhaps do it in the reader?
     // Check table creation possibility
-    if (!checkTableCreationPossibility(drillSchema, originalTableName, drillConfig, context.getSession(), schemaPath, false)) {
+    if (!checkTableInsertionPossibility(drillSchema, originalTableName, drillConfig, context.getSession(), schemaPath, true)) {
       return DirectPlan.createDirectPlan(context, false,
         String.format("A table or view with given name [%s] already exists in schema [%s]", originalTableName, schemaPath));
     }
@@ -147,8 +146,10 @@ public class InsertHandler extends DefaultSqlHandler {
       addRenamedProject(convertedRelNode, queryRowType) : convertedRelNode;
 
     final RelTraitSet traits = convertedRelNode.getCluster().traitSet().plus(DrillRel.DRILL_LOGICAL);
+    
     final DrillWriterRel writerRel = new DrillWriterRel(convertedRelNode.getCluster(),
       traits, topPreservedNameProj, schema.createNewTable(tableName, partitionColumns, storageStrategy));
+
     return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
   }
 
@@ -184,15 +185,16 @@ public class InsertHandler extends DefaultSqlHandler {
    * @return if duplicate found in indicated schema
    * @throws UserException if duplicate found in indicated schema and no duplicate check requested
    */
-  private boolean checkTableCreationPossibility(AbstractSchema drillSchema,
-                                                String tableName,
-                                                DrillConfig config,
-                                                UserSession userSession,
-                                                String schemaPath,
-                                                boolean checkTableNonExistence) {
+  private boolean checkTableInsertionPossibility(AbstractSchema drillSchema,
+                                                 String tableName,
+                                                 DrillConfig config,
+                                                 UserSession userSession,
+                                                 String schemaPath,
+                                                 boolean checkTableNonExistence) {
     boolean isTemporaryTable = userSession.isTemporaryTable(drillSchema, config, tableName);
 
-    if (isTemporaryTable || SqlHandlerUtil.getTableFromSchema(drillSchema, tableName) != null) {
+    boolean tableFound = SqlHandlerUtil.getTableFromSchema(drillSchema, tableName) != null;
+    if (isTemporaryTable || tableFound) {
       if (checkTableNonExistence) {
         return false;
       } else {

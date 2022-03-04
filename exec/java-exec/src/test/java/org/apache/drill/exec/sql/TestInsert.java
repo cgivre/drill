@@ -45,6 +45,14 @@ public class TestInsert extends ClusterTest {
   }
 
   @Test
+  public void testInsertWithMissingTable() throws Exception {
+    String sql = "INSERT INTO dfs.`store/text/data/no-cars.csvh` VALUES ('2018','Alfa Romeo','Giulia','Nice!!', '50000')";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
+  }
+
+
+  @Test
   public void testCSV() throws Exception {
     String sql = "SELECT * FROM dfs.`store/text/data/cars.csvh`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
