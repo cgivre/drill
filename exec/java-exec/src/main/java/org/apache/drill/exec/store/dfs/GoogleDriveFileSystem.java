@@ -106,7 +106,21 @@ public class GoogleDriveFileSystem extends FileSystem {
    * @throws IOException If the file cannot be found, or the service is null, throw IOException
    */
   private String getFileID(String fileName) throws IOException {
-    String pageToken = null;
+    if (fileName.contentEquals("/")) {
+      return "root";
+    }
+
+    /*
+    let folderName = "myFolder";
+let result = await drive.files.list({
+    q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
+    fields: 'nextPageToken, files(id, name)',
+    spaces: 'drive',
+     */
+
+
+    String pageToken = "";
+    fileName = removeLeadingSlash(fileName);
     try {
       service = getGoogleDriveService();
     } catch (GeneralSecurityException e) {
@@ -119,7 +133,6 @@ public class GoogleDriveFileSystem extends FileSystem {
       .setQ("name='" + fileName + "'")
       .setSpaces("drive")
       .setFields("nextPageToken, files(id, name)")
-      .setPageToken(pageToken)
       .execute();
 
     if (result.isEmpty()) {
@@ -140,6 +153,19 @@ public class GoogleDriveFileSystem extends FileSystem {
     }
   }
 
+  /**
+   * Removes the leading slash if present
+   * @param inputPathString The input path
+   * @return The input path without the leading slash
+   */
+  private String removeLeadingSlash(String inputPathString) {
+    if (inputPathString.startsWith("/")) {
+      return inputPathString.substring(1);
+    } else {
+      return inputPathString;
+    }
+  }
+
   @Override
   public FSDataOutputStream create(Path f, FsPermission permission, boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
     return null;
@@ -150,6 +176,12 @@ public class GoogleDriveFileSystem extends FileSystem {
     throw new IOException("Drill does not support appending to Google Drive.");
   }
 
+  /**
+   * Returns an active GoogleDrive service
+   * @return An active Google Drive service.  If the service is already active, returns the current one.
+   * @throws GeneralSecurityException  If credentials are invalid, or other security issue, throw GeneralSecurityException
+   * @throws IOException If there are other IO issues, throw an IO exception.
+   */
   private Drive getGoogleDriveService() throws GeneralSecurityException, IOException {
     if (service != null) {
       return service;
@@ -193,12 +225,21 @@ public class GoogleDriveFileSystem extends FileSystem {
 
   @Override
   public FileStatus[] listStatus(Path f) throws FileNotFoundException, IOException {
+    try {
+      service = getGoogleDriveService();
+    } catch (GeneralSecurityException e) {
+      throw UserException.connectionError()
+        .message("Could not connect to Google Drive service.")
+        .build(logger);
+    }
+
     String pageToken = null;
+    String directoryName = f.getName();
     FileList result = service.files().list()
-      .setQ("'root' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
+      .setQ("'root' in parents and trashed = false")
       .setSpaces("drive")
       .setFields("nextPageToken, files(id, name, parents)")
-      .setPageToken(pageToken)
+      .setSupportsAllDrives(true)
       .execute();
 
     List<FileStatus> fileList = new ArrayList<>();
@@ -222,15 +263,33 @@ public class GoogleDriveFileSystem extends FileSystem {
 
   @Override
   public FileStatus getFileStatus(Path path) throws IOException {
+    try {
+      service = getGoogleDriveService();
+    } catch (GeneralSecurityException e) {
+      throw UserException.connectionError()
+        .message("Could not connect to Google Drive service.")
+        .build(logger);
+    }
+
     String filePath  = Path.getPathWithoutSchemeAndAuthority(path).toString();
     String filePathString = path.toString();
     String fileID = getFileID(filePathString);
 
+    /*
     if (filePath.equalsIgnoreCase("/")) {
+      return new FileStatus(0, true, 1, 0, 0, new Path("/"));
+    } else if (StringUtils.isEmpty(fileID)) {
+      // If the file path cannot be found, return null.
+      return new FileStatus(0, true, 1, 0, 0, new Path(filePathString));
+    }*/
+
+    if (fileID.contentEquals("root")) {
       return new FileStatus(0, true, 1, 0, 0, new Path("/"));
     }
 
-    File data = service.files().get("fileId=" + fileID + ", fields='*'").execute();
+    File data = service.files()
+      .get("fileId=" + fileID + ", fields='*'")
+      .execute();
     return new FileStatus();
   }
 }
