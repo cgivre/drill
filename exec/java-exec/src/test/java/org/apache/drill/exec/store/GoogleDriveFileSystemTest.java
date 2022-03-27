@@ -24,7 +24,7 @@ import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 import org.apache.drill.exec.store.easy.json.JSONFormatPlugin;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
+import org.apache.drill.exec.store.easy.text.TextFormatConfig;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
@@ -60,7 +60,7 @@ public class GoogleDriveFileSystemTest extends ClusterTest {
     List<String> csvExtensions = new ArrayList<>();
     csvExtensions.add("csv");
     csvExtensions.add("csvh");
-    FormatPluginConfig csvFormatConfig = new TextFormatPlugin.TextFormatConfig(csvExtensions, "\n", ",", "\"", null, null, false, true);
+    FormatPluginConfig csvFormatConfig = new TextFormatConfig(csvExtensions, "\n", ",", "\"", null, null, false, true);
 
     StoragePluginConfig googleConfig = new FileSystemConfig("googledrive:///", new HashMap<>(), workspaces, formats, null);
     googleConfig.setEnabled(true);
