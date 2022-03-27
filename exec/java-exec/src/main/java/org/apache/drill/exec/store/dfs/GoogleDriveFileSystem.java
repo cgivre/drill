@@ -226,12 +226,11 @@ public class GoogleDriveFileSystem extends FileSystem {
     String filePathString = path.toString();
     String fileID = getFileID(filePathString);
 
-    File data = service.files().get("fileId=" + fileID + ", fields='*'").execute();
-
     if (filePath.equalsIgnoreCase("/")) {
       return new FileStatus(0, true, 1, 0, 0, new Path("/"));
     }
 
+    File data = service.files().get("fileId=" + fileID + ", fields='*'").execute();
     return new FileStatus();
   }
 }
