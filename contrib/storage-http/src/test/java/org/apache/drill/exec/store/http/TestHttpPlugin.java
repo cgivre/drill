@@ -537,7 +537,6 @@ public class TestHttpPlugin extends ClusterTest {
 
       RowSetUtilities.verify(expected, results);
     } catch (Exception e) {
-      System.out.println(e.getMessage());
       fail();
     }
   }

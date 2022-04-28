@@ -69,7 +69,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   public JSONFormatPlugin(String name, DrillbitContext context,
       Configuration fsConf, StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new JSONFormatConfig(null, null, null, null, null, null));
+    this(name, context, fsConf, storageConfig, new JSONFormatConfig(null, null, null, null, null, null, null));
   }
 
   public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf,

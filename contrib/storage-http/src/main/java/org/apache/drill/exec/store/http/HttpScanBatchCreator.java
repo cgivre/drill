@@ -25,6 +25,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ReaderFactory;
@@ -33,6 +34,7 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.http.HttpPaginatorConfig.PaginatorMethod;
 import org.apache.drill.exec.store.http.paginator.OffsetPaginator;
 import org.apache.drill.exec.store.http.paginator.PagePaginator;
@@ -41,11 +43,14 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpScanBatchCreator.class);
+  private List<RecordReader> readers = new LinkedList<>();
 
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
@@ -53,8 +58,16 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
                                        List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     try {
-      ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
-      return builder.buildScanOperator(context, subScan);
+      // Until the union operator exists in the V2 JSON reader, this option allows the user
+      // to use the UNION data type in API calls.
+      if (useLegacyReader(subScan)) {
+        HttpLegacyJsonRecordReader reader = new HttpLegacyJsonRecordReader(context, subScan);
+        readers.add(reader);
+        return new ScanBatch(subScan, context, readers);
+      } else {
+        ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
+        return builder.buildScanOperator(context, subScan);
+      }
     } catch (UserException e) {
       // Rethrow user exceptions directly
       throw e;
@@ -88,6 +101,13 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
     // TODO Add page size limit here to ScanFramework Builder
 
     return builder;
+  }
+
+  private boolean useLegacyReader(HttpSubScan subScan) {
+    return subScan.tableSpec().connectionConfig().inputType().toLowerCase(Locale.ROOT).contentEquals("json") &&
+      subScan.tableSpec().connectionConfig().jsonOptions() != null &&
+      subScan.tableSpec().connectionConfig().jsonOptions().unionEnabled() != null &&
+      subScan.tableSpec().connectionConfig().jsonOptions().unionEnabled();
   }
 
   private static class HttpReaderFactory implements ReaderFactory {

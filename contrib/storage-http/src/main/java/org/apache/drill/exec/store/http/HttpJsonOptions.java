@@ -45,11 +45,15 @@ public class HttpJsonOptions {
   @JsonProperty
   private final Boolean enableEscapeAnyChar;
 
+  @JsonProperty
+  private final Boolean unionEnabled;
+
   HttpJsonOptions(HttpJsonOptionsBuilder builder) {
     this.allowNanInf = builder.allowNanInf;
     this.allTextMode = builder.allTextMode;
     this.readNumbersAsDouble = builder.readNumbersAsDouble;
     this.enableEscapeAnyChar = builder.enableEscapeAnyChar;
+    this.unionEnabled = builder.unionEnabled;
   }
 
   public static HttpJsonOptionsBuilder builder() {
@@ -70,6 +74,9 @@ public class HttpJsonOptions {
     }
     if (enableEscapeAnyChar != null) {
       options.enableEscapeAnyChar = enableEscapeAnyChar;
+    }
+    if (unionEnabled != null) {
+      options.unionEnabled = unionEnabled;
     }
     return options;
   }
@@ -94,6 +101,11 @@ public class HttpJsonOptions {
     return this.enableEscapeAnyChar;
   }
 
+  @JsonProperty("unionEnabled")
+  public Boolean unionEnabled() {
+    return this.unionEnabled;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -106,12 +118,13 @@ public class HttpJsonOptions {
     return Objects.equals(allowNanInf, that.allowNanInf)
       && Objects.equals(allTextMode, that.allTextMode)
       && Objects.equals(readNumbersAsDouble, that.readNumbersAsDouble)
-      && Objects.equals(enableEscapeAnyChar, that.enableEscapeAnyChar);
+      && Objects.equals(enableEscapeAnyChar, that.enableEscapeAnyChar)
+      && Objects.equals(unionEnabled, that.unionEnabled);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar);
+    return Objects.hash(allowNanInf, allTextMode, readNumbersAsDouble, enableEscapeAnyChar, unionEnabled);
   }
 
   @Override
@@ -121,6 +134,7 @@ public class HttpJsonOptions {
       .field("allTextMode", allTextMode)
       .field("readNumbersAsDouble", readNumbersAsDouble)
       .field("enableEscapeAnyChar", enableEscapeAnyChar)
+      .field("unionEnabled", unionEnabled)
       .toString();
   }
 
@@ -133,6 +147,8 @@ public class HttpJsonOptions {
     private Boolean readNumbersAsDouble;
 
     private Boolean enableEscapeAnyChar;
+
+    private Boolean unionEnabled;
 
     public HttpJsonOptionsBuilder allowNanInf(Boolean allowNanInf) {
       this.allowNanInf = allowNanInf;
@@ -151,6 +167,11 @@ public class HttpJsonOptions {
 
     public HttpJsonOptionsBuilder enableEscapeAnyChar(Boolean enableEscapeAnyChar) {
       this.enableEscapeAnyChar = enableEscapeAnyChar;
+      return this;
+    }
+
+    public HttpJsonOptionsBuilder unionEnabled(Boolean unionEnabled) {
+      this.unionEnabled = unionEnabled;
       return this;
     }
 

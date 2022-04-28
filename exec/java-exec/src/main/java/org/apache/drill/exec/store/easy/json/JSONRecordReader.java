@@ -115,7 +115,8 @@ public class JSONRecordReader extends AbstractRecordReader {
         embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
-        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE)));
   }
 
   /**
@@ -131,7 +132,13 @@ public class JSONRecordReader extends AbstractRecordReader {
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
-        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR)));
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE)));
+  }
+
+
+  public JSONRecordReader(FragmentContext fragmentContext, List<SchemaPath> columns, JSONFormatConfig config) {
+    this(fragmentContext, null, null, null, columns, true, config);
   }
 
   private JSONRecordReader(FragmentContext fragmentContext, Path inputPath, JsonNode embeddedContent,
@@ -159,7 +166,8 @@ public class JSONRecordReader extends AbstractRecordReader {
         embeddedContent == null && fragmentContext.getOptions().getOption(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_SKIP_MALFORMED_RECORDS_VALIDATOR),
         fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR),
-        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR));
+        fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS_VALIDATOR),
+        fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE));
     } else {
       this.config = config;
     }
@@ -171,7 +179,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     this.enableNanInf = nanInf(contextOpts);
     this.enableEscapeAnyChar = escapeAnyChar(contextOpts);
     this.readNumbersAsDouble = readNumbersAsDouble(contextOpts);
-    this.unionEnabled = embeddedContent == null && fragmentContext.getOptions().getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
+    this.unionEnabled = unionEnabled(contextOpts);
     this.skipMalformedJSONRecords = skipMalformedJSONRecords(contextOpts);
     this.printSkippedMalformedJSONRecordLineNumber = fragmentContext.getOptions().getOption(ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG_VALIDATOR);
     setColumns(columns);
@@ -200,6 +208,16 @@ public class JSONRecordReader extends AbstractRecordReader {
     );
 
     return embeddedContent == null && numbersAsDouble;
+  }
+
+  private boolean unionEnabled(OptionManager contextOpts) {
+    boolean unionEnabled = (Boolean) ObjectUtils.firstNonNull(
+      contextOpts.getOption(ExecConstants.ENABLE_UNION_TYPE_KEY).getValueMinScope(MIN_SCOPE),
+      config.getUnionEnabled(),
+      contextOpts.getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY)
+    );
+
+    return embeddedContent == null && unionEnabled;
   }
 
   private boolean skipMalformedJSONRecords(OptionManager contextOpts) {

@@ -40,6 +40,7 @@ public class JSONFormatConfig implements FormatPluginConfig {
   private final Boolean skipMalformedJSONRecords;
   private final Boolean escapeAnyChar;
   private final Boolean nanInf;
+  private final Boolean unionEnabled;
 
   @JsonCreator
   public JSONFormatConfig(
@@ -48,13 +49,15 @@ public class JSONFormatConfig implements FormatPluginConfig {
       @JsonProperty("readNumbersAsDouble") Boolean readNumbersAsDouble,
       @JsonProperty("skipMalformedJSONRecords") Boolean skipMalformedJSONRecords,
       @JsonProperty("escapeAnyChar") Boolean escapeAnyChar,
-      @JsonProperty("nanInf") Boolean nanInf) {
+      @JsonProperty("nanInf") Boolean nanInf,
+      @JsonProperty("unionEnabled") Boolean unionEnabled) {
     this.extensions = extensions == null ? DEFAULT_EXTS : ImmutableList.copyOf(extensions);
     this.allTextMode = allTextMode;
     this.readNumbersAsDouble = readNumbersAsDouble;
     this.skipMalformedJSONRecords = skipMalformedJSONRecords;
     this.escapeAnyChar = escapeAnyChar;
     this.nanInf = nanInf;
+    this.unionEnabled = unionEnabled;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -87,9 +90,14 @@ public class JSONFormatConfig implements FormatPluginConfig {
     return nanInf;
   }
 
+  @JsonInclude(JsonInclude.Include.NON_ABSENT)
+  public Boolean getUnionEnabled() {
+    return unionEnabled;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, allTextMode, readNumbersAsDouble, skipMalformedJSONRecords, escapeAnyChar, nanInf);
+    return Objects.hash(extensions, allTextMode, readNumbersAsDouble, skipMalformedJSONRecords, escapeAnyChar, nanInf, unionEnabled);
   }
 
   @Override
@@ -106,7 +114,8 @@ public class JSONFormatConfig implements FormatPluginConfig {
       Objects.equals(readNumbersAsDouble, other.readNumbersAsDouble) &&
       Objects.equals(skipMalformedJSONRecords, other.skipMalformedJSONRecords) &&
       Objects.equals(escapeAnyChar, other.escapeAnyChar) &&
-      Objects.equals(nanInf, other.nanInf);
+      Objects.equals(nanInf, other.nanInf) &&
+      Objects.equals(unionEnabled, other.unionEnabled);
   }
 
   @Override
@@ -118,6 +127,7 @@ public class JSONFormatConfig implements FormatPluginConfig {
       .field("skipMalformedRecords", skipMalformedJSONRecords)
       .field("escapeAnyChar", escapeAnyChar)
       .field("nanInf", nanInf)
+      .field("unionEnabled", unionEnabled)
       .toString();
   }
 }
