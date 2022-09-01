@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets.Details;
+import com.google.api.services.sheets.v4.SheetsScopes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.OAuthConfig;
@@ -43,9 +44,7 @@ import java.util.Optional;
 public class GoogleSheetsStoragePluginConfig extends StoragePluginConfig {
   private static final String AUTH_URI = "https://accounts.google.com/o/oauth2/auth";
   private static final String TOKEN_URI = "https://oauth2.googleapis.com/token";
-  private static final String GOOGLE_SHEET_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
-  private static final String GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
-  private static final String DEFAULT_SCOPE = GOOGLE_SHEET_SCOPE + " " + GOOGLE_DRIVE_SCOPE;
+  private static final String DEFAULT_SCOPE = SheetsScopes.SPREADSHEETS + " " + SheetsScopes.DRIVE_READONLY;
   private static final String DEFAULT_RESPONSE_TYPE = "code";
   public static final String NAME = "googlesheets";
   private final List<String> redirectUris;

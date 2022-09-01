@@ -71,7 +71,11 @@
       <artifactId>google-api-services-sheets</artifactId>
       <version>v4-rev20220606-1.32.1</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-drive</artifactId>
+      <version>v3-rev197-1.25.0</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>

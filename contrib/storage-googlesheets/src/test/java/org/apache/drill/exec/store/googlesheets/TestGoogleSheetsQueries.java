@@ -102,6 +102,20 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
+  public void testInfoSchemaQuery() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = "SHOW TABLES IN googlesheets";
+    RowSet results = queryBuilder().sql(sql).rowSet();
+    results.print();
+  }
+
+
+  @Test
   public void testStarQuery() throws Exception {
     try {
       initializeTokens("googlesheets");
