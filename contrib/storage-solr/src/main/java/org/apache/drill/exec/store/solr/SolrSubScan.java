@@ -34,10 +34,12 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SolrSubScan extends AbstractBase implements SubScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SolrSubScan.class);
-
+  private static final Logger logger = LoggerFactory.getLogger(SolrSubScan.class);
+  public static final String OPERATOR_TYPE = "SOLR_SCAN";
   @JsonIgnore
   private final SolrStoragePlugin solrPlugin;
 
@@ -102,9 +104,8 @@ public class SolrSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public int getOperatorType() {
-    // TODO Fix with protobuf
-    return 0;
+  public String getOperatorType() {
+    return OPERATOR_TYPE;
   }
 
   @Override

@@ -239,7 +239,6 @@ public class SolrRecordReader extends AbstractRecordReader {
           sb.append(filter);
         }
       }
-
       if (useSolrStream) {
         SolrStream solrStream = solrClientApiExec.getSolrStreamResponse(solrServerUrl, solrClient, solrCoreName, this.fields, sb, uniqueKey, solrDocFetchCount);
 

@@ -26,14 +26,15 @@ import java.util.Set;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillTableSelection;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.solr.SolrScanSpec;
 import org.apache.drill.exec.store.solr.SolrStoragePlugin;
 import org.apache.drill.exec.store.solr.SolrStoragePluginConfig;
 import org.apache.drill.exec.store.solr.SolrStorageProperties;
 import org.apache.drill.exec.store.solr.datatype.SolrDataType;
 import org.apache.drill.exec.store.sys.StaticDrillTable;
-import org.apache.http.client.ClientProtocolException;
 
 import com.google.common.collect.Maps;
 
@@ -97,7 +98,8 @@ public class SolrSchema extends AbstractSchema {
       }
       SolrScanSpec scanSpec = new SolrScanSpec(coreName, oCVSchema);
 
-      drillTable = new StaticDrillTable(SolrStoragePluginConfig.NAME, solrStoragePlugin, TableType.TABLE, oCVSchema, new SolrDataType(scanSpec.getCvSchema()));
+      // TODO Verify that this actually works...
+      drillTable = new StaticDrillTable(SolrStoragePluginConfig.NAME, (StoragePlugin) solrStoragePlugin, TableType.TABLE, (DrillTableSelection) oCVSchema, new SolrDataType(scanSpec.getCvSchema()));
 
 
       drillTables.put(coreName, drillTable);
@@ -153,9 +155,7 @@ public class SolrSchema extends AbstractSchema {
         logger.debug("There is no cores in the current solr server : " + solrServerUrl);
       }
 
-    } catch (ClientProtocolException e ) {
-      logger.debug("creating view failed : " + e.getMessage());
-    } catch (IOException e) {
+    } catch (IOException e ) {
       logger.debug("creating view failed : " + e.getMessage());
     }
   }

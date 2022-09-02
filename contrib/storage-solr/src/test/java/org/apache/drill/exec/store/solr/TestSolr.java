@@ -17,23 +17,38 @@
  */
 package org.apache.drill.exec.store.solr;
 
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.ClusterTest;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.SolrContainer;
+import org.testcontainers.utility.DockerImageName;
 
 public class TestSolr extends ClusterTest {
   private static final Logger logger = LoggerFactory.getLogger(TestSolr.class);
+  private static final String SOLR_IMAGE = "solr:latest";
+  private static SolrContainer container;
+
   private static final String solrServer = "http://localhost:20000/solr/";
+
   private static final String solrCoreName = "bootstrap_5";
   private SolrScanSpec solrScanSpec;
 
   @Before
   public void setUp() {
+
+    container = new SolrContainer(DockerImageName.parse(SOLR_IMAGE));
+    container.start();
+
     solrScanSpec = new SolrScanSpec(solrCoreName);
 
+  }
+
+  @After
+  public void tearDown() {
+    container.stop();
   }
 
   @Test
