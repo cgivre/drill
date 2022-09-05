@@ -18,12 +18,10 @@
 
 package org.apache.drill.exec.store.googlesheets.schema;
 
-import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.Sheet;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -50,22 +48,10 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
   private List<Sheet> sheetList = new ArrayList<>();
   private final GoogleSheetsStoragePlugin plugin;
   private final SchemaConfig schemaConfig;
-  private final Map<String, String> tokenMap;
-  private final Drive driveService;
 
   public GoogleSheetsRootSchema(GoogleSheetsStoragePlugin plugin, SchemaConfig schemaConfig) {
     super(Collections.emptyList(), plugin.getName());
     this.schemaConfig = schemaConfig;
-
-    this.driveService = plugin.getDriveService(schemaConfig.getUserName());
-    try {
-      tokenMap = GoogleSheetsUtils.getTokenToNameMap(driveService);
-    } catch (IOException e) {
-      throw UserException.dataReadError()
-        .message("Unable to retrieve file list from Google Drive: " + e.getMessage())
-        .build(logger);
-    }
-
     this.plugin = plugin;
   }
 
@@ -79,20 +65,11 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
 
   @Override
   public Set<String> getSubSchemaNames() {
-    // Find sub schemas
-    if (!tokenMap.isEmpty()) {
-      return tokenMap.keySet();
-    }
-
     return schemas.keySet();
   }
 
   @Override
   public GoogleSheetsDrillSchema getSubSchema(String name) {
-    /*if (! GoogleSheetsUtils.isProbableFileToken(name)) {
-      name = toke
-    }*/
-
     GoogleSheetsDrillSchema schema = schemas.get(name);
     // This level here represents the actual Google document. Attempt to validate that it exists, and
     // if so, add it to the schema list.  If not, throw an exception.
@@ -103,11 +80,9 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
         // we are storing separate access tokens for each user.
         logger.debug("Accessing credentials for {}", schemaConfig.getUserName());
 
-        Map<String, String> fileList = GoogleSheetsUtils.getTokenToNameMap(driveService);
         sheetList = GoogleSheetsUtils.getSheetList(service, name);
       } catch (IOException e) {
         // Do nothing
-        logger.error(e.getMessage());
       }
       // At this point we know we have a valid sheet because we obtained the Sheet list, so we need to
       // add the schema to the schemas list and return it.

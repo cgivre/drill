@@ -101,6 +101,12 @@ public class GoogleSheetsDrillSchema extends AbstractSchema {
     return table;
   }
 
+  @Override
+  public boolean showInInformationSchema() {
+    // Do not show tab names in the info schema.
+    return false;
+  }
+
   private DynamicDrillTable getDrillTable(String tableName) {
     logger.debug("Getting Drill Table {}", tableName);
     return activeTables.get(tableName);

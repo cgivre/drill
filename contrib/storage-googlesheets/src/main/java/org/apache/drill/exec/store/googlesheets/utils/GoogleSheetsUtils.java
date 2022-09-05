@@ -249,7 +249,6 @@ public class GoogleSheetsUtils {
       FileList result = driveService.files().list()
         .setQ("mimeType='application/vnd.google-apps.spreadsheet'")
         .setSpaces("drive")
-        //.setCorpora("allDrives")
         .setPageToken(pageToken)
         .execute();
 

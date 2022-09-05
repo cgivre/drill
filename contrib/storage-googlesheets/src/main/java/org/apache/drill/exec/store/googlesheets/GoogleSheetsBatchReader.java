@@ -18,8 +18,10 @@
 
 package org.apache.drill.exec.store.googlesheets;
 
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.Sheet;
+import com.google.api.services.sheets.v4.model.SheetProperties;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -62,8 +64,10 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
   private final List<SchemaPath> projectedColumns;
   private final Sheet sheet;
   private final Sheets service;
+  private final Drive driveService;
   private final GoogleSheetsRangeBuilder rangeBuilder;
   private final String sheetID;
+  private final String fileName;
   private CustomErrorContext errorContext;
   private Map<String, GoogleSheetsColumn> columnMap;
   private RowSetLoader rowWriter;
@@ -73,10 +77,12 @@ public class GoogleSheetsBatchReader implements ManagedReader<SchemaNegotiator> 
     this.subScan = subScan;
     this.projectedColumns = subScan.getColumns();
     this.service = plugin.getSheetsService(subScan.getUserName());
+    this.driveService = plugin.getDriveService(subScan.getUserName());
     this.sheetID = subScan.getScanSpec().getSheetID();
     try {
       List<Sheet> sheetList = GoogleSheetsUtils.getSheetList(service, sheetID);
       this.sheet = sheetList.get(subScan.getScanSpec().getTabIndex());
+      fileName = driveService.files().get(sheetID).execute().getName();
     } catch (IOException e) {
       throw UserException.connectionError(e)
         .message("Could not find tab with index " + subScan.getScanSpec().getTabIndex())
