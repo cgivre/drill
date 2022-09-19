@@ -21,7 +21,9 @@ package org.apache.drill.exec.store.googlesheets;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.util.store.DataStore;
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
@@ -50,7 +52,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
@@ -61,8 +65,10 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
   private final OAuthTokenProvider tokenProvider;
   private DataStore<StoredCredential> dataStore;
   private Sheets service;
+  private Drive driveService;
   private TokenRegistry tokenRegistry;
   private String username;
+  private final Map<String, Spreadsheet> spreadsheetCache;
 
 
   public GoogleSheetsStoragePlugin(GoogleSheetsStoragePluginConfig configuration, DrillbitContext context, String name) {
@@ -70,6 +76,7 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
     this.config = configuration;
     this.tokenProvider = context.getoAuthTokenProvider();
     this.schemaFactory = new GoogleSheetsSchemaFactory(this);
+    this.spreadsheetCache = new HashMap<>();
   }
 
   public void initializeOauthTokenTable(SchemaConfig schemaConfig) {
@@ -215,5 +222,47 @@ public class GoogleSheetsStoragePlugin extends AbstractStoragePlugin {
           .build(logger);
       }
     }
+  }
+
+  /**
+   * This method gets (and caches) the Google Drive Service needed for mapping Google Sheet names
+   * to file tokens.
+   * @param queryUser A {@link String} of the current query user.
+   * @return A validated and authenticated {@link Drive} instance.
+   */
+  public Drive getDriveService(String queryUser) {
+    if (driveService != null && dataStore != null) {
+      return driveService;
+    } else {
+      // Check if datastore is null and initialize if so.
+      if (dataStore == null) {
+        this.dataStore = getDataStore(queryUser);
+      }
+
+      try {
+        if (config.getAuthMode() == AuthMode.USER_TRANSLATION) {
+          driveService = GoogleSheetsUtils.getDriveService(config, dataStore, queryUser);
+        } else {
+          driveService = GoogleSheetsUtils.getDriveService(config, dataStore, SHARED_USERNAME);
+        }
+        return driveService;
+      } catch (IOException | GeneralSecurityException e) {
+        throw UserException.connectionError(e)
+          .message("Error connecting to Google Drive Service: " + e.getMessage())
+          .build(logger);
+      }
+    }
+  }
+
+  public Map<String, Spreadsheet> getSpreadsheetCache() {
+    return spreadsheetCache;
+  }
+
+  public void addSpreadsheetToCache(String token, Spreadsheet tab) {
+    spreadsheetCache.put(token, tab);
+  }
+
+  public void clearTabCache() {
+    spreadsheetCache.clear();
   }
 }

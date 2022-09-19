@@ -103,6 +103,26 @@ public class TestGoogleSheetsQueries extends ClusterTest {
   }
 
   @Test
+  public void testInformationSchema() throws Exception {
+    try {
+      initializeTokens("googlesheets");
+    } catch (PluginException e) {
+      fail(e.getMessage());
+    }
+
+    String sql = "SELECT * FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE SCHEMA_NAME LIKE 'googlesheets%'";
+    RowSet results = queryBuilder().sql(sql).rowSet();
+    assertEquals(1, results.rowCount());
+    results.print();
+    results.clear();
+
+    sql = "SELECT * FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` LIKE 'googlesheets%'";
+    results = queryBuilder().sql(sql).rowSet();
+    results.print();
+    results.clear();
+  }
+
+  @Test
   public void testStarQuery() throws Exception {
     try {
       initializeTokens("googlesheets");

@@ -34,8 +34,8 @@ public class GoogleSheetsSchemaFactory extends AbstractSchemaFactory {
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    GoogleSheetsRootSchema schema = new GoogleSheetsRootSchema(plugin, schemaConfig);
-    SchemaPlus holder = parent.add(getName(), schema);
-    schema.setHolder(holder);
+    GoogleSheetsRootSchema rootSchema = new GoogleSheetsRootSchema(plugin, schemaConfig);
+    SchemaPlus holder = parent.add(getName(), rootSchema);
+    // schema.setHolder(holder);
   }
 }

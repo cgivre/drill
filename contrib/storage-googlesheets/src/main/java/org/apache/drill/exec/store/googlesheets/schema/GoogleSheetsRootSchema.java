@@ -18,10 +18,12 @@
 
 package org.apache.drill.exec.store.googlesheets.schema;
 
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.Sheet;
-import org.apache.calcite.schema.SchemaPlus;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
 import org.apache.calcite.schema.Table;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -48,21 +50,32 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
   private List<Sheet> sheetList = new ArrayList<>();
   private final GoogleSheetsStoragePlugin plugin;
   private final SchemaConfig schemaConfig;
+  private final Map<String, String> tokenMap;
 
 
   public GoogleSheetsRootSchema(GoogleSheetsStoragePlugin plugin, SchemaConfig schemaConfig) {
     super(Collections.emptyList(), plugin.getName());
     this.schemaConfig = schemaConfig;
     this.plugin = plugin;
+    Drive driveService = plugin.getDriveService(schemaConfig.getUserName());
+
+    try {
+      tokenMap = GoogleSheetsUtils.getTokenToNameMap(driveService);
+    } catch (IOException e) {
+      throw UserException.connectionError(e)
+        .message("Error connecting to Google Drive Service")
+        .build(logger);
+    }
+    logger.debug("We're here.");
   }
 
-  void setHolder(SchemaPlus plusOfThis) {
+  /*void setHolder(SchemaPlus plusOfThis) {
     for (String s : getSubSchemaNames()) {
       GoogleSheetsDrillSchema inner = getSubSchema(s);
       SchemaPlus holder = plusOfThis.add(s, inner);
       inner.setHolder(holder);
     }
-  }
+  }*/
 
   @Override
   public Set<String> getSubSchemaNames() {
@@ -70,13 +83,10 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
   }
 
   @Override
-  public GoogleSheetsDrillSchema getSubSchema(String name) {
-    GoogleSheetsDrillSchema schema = schemas.get(name);
+  public GoogleSheetsDrillSchema getSubSchema(String fileToken) {
+    GoogleSheetsDrillSchema schema = schemas.get(fileToken);
     // This level here represents the actual Google document. Attempt to validate that it exists, and
     // if so, add it to the schema list.  If not, throw an exception.
-    //
-    // TODO In the future, we could add a check here to see whether the user has the DRIVE permission, and if so,
-    // retrieve the actual "file" name to use in the query instead of the non-readable ID.
     if (schema == null) {
       Sheets service = plugin.getSheetsService(schemaConfig.getUserName());
       try {
@@ -84,16 +94,33 @@ public class GoogleSheetsRootSchema extends AbstractSchema {
         // we are storing separate access tokens for each user.
         logger.debug("Accessing credentials for {}", schemaConfig.getUserName());
 
-        sheetList = GoogleSheetsUtils.getSheetList(service, name);
+        sheetList = getSheetList(service, fileToken);
       } catch (IOException e) {
-        // Do nothing
+        throw UserException.connectionError(e)
+          .message("Error connecting to Google Sheets service: " + e.getMessage())
+          .build(logger);
       }
       // At this point we know we have a valid sheet because we obtained the Sheet list, so we need to
       // add the schema to the schemas list and return it.
-      schema = new GoogleSheetsDrillSchema(this, name, plugin, sheetList, schemaConfig);
-      schemas.put(name, schema);
+      schema = new GoogleSheetsDrillSchema(this, fileToken, plugin, sheetList, schemaConfig);
+      schemas.put(fileToken, schema);
     }
     return schema;
+  }
+
+  private List<Sheet> getSheetList(Sheets service, String fileToken) throws IOException {
+    System.out.println("Getting sheet for " + fileToken);
+    if (plugin.getSpreadsheetCache().containsKey(fileToken)) {
+      // If the Spreadsheet object has been seen before, don't get it again, and get the tab list from cache.
+      System.out.println(fileToken + " in cache.");
+      return plugin.getSpreadsheetCache().get(fileToken).getSheets();
+    } else {
+      System.out.println(fileToken + " not in cache.");
+      // Otherwise, add this to cache and then retrieve the list
+      Spreadsheet spreadsheet = service.spreadsheets().get(fileToken).execute();
+      plugin.addSpreadsheetToCache(fileToken, spreadsheet);
+      return spreadsheet.getSheets();
+    }
   }
 
   @Override
