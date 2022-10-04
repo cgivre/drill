@@ -17,19 +17,16 @@
  */
 package org.apache.drill.exec.store.image;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileScanLifecycleBuilder;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin.ScanFrameworkVersion;
 import org.apache.hadoop.conf.Configuration;
 
 public class ImageFormatPlugin extends EasyFormatPlugin<ImageFormatConfig> {
@@ -50,7 +47,7 @@ public class ImageFormatPlugin extends EasyFormatPlugin<ImageFormatConfig> {
         .compressible(true)
         .extensions(pluginConfig.getExtensions())
         .fsConf(fsConf)
-        .scanVersion(ScanFrameworkVersion.EVF_V1)
+        .scanVersion(ScanFrameworkVersion.EVF_V2)
         .supportsLimitPushdown(true)
         .supportsProjectPushdown(true)
         .defaultName(ImageFormatConfig.NAME)
@@ -68,25 +65,14 @@ public class ImageFormatPlugin extends EasyFormatPlugin<ImageFormatConfig> {
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new ImageBatchReader(config, scan);
+    public ManagedReader newReader(FileSchemaNegotiator negotiator) {
+      return new ImageBatchReader(config, scan, negotiator);
     }
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionSet options)
-      throws ExecutionSetupException {
-    return new ImageBatchReader(formatConfig, scan);
-  }
-
-  @Override
-  protected FileScanBuilder frameworkBuilder(EasySubScan scan, OptionSet options)
-      throws ExecutionSetupException {
-    FileScanBuilder builder = new FileScanBuilder();
-    builder.setReaderFactory(new ImageReaderFactory(formatConfig, scan));
-
-    initScanBuilder(builder, scan);
-    builder.nullType(Types.optional(MinorType.VARCHAR));
-    return builder;
+  protected void configureScan(FileScanLifecycleBuilder builder, EasySubScan scan) {
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    builder.readerFactory(new ImageReaderFactory(formatConfig, scan));
   }
 }

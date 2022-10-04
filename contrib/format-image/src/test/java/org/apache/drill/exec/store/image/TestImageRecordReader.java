@@ -68,6 +68,7 @@ public class TestImageRecordReader extends ClusterTest {
     String sql = "select Format, PixelWidth, HasAlpha, `XMP` from dfs.`image/withExifAndIptc.jpg`";
     QueryBuilder builder = client.queryBuilder().sql(sql);
     RowSet sets = builder.rowSet();
+    sets.print();
 
     TupleMetadata schema = new SchemaBuilder()
         .addNullable("Format", MinorType.VARCHAR)

@@ -28,13 +28,13 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileDescrip;
+import org.apache.drill.exec.physical.impl.scan.v3.file.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -53,12 +53,13 @@ import com.drew.metadata.eps.EpsDirectory;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.xmp.XmpDirectory;
 
-public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
+public class ImageBatchReader implements ManagedReader {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ImageBatchReader.class);
 
   private final ImageFormatConfig config;
   private final EasySubScan scan;
+  private final FileDescrip file;
   private CustomErrorContext errorContext;
   private Path path;
   private FileStatus fileStatus;
@@ -67,19 +68,15 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private LinkedHashMap<String, ColumnDefn> genericColumns;
   private Metadata metadata;
 
-  public ImageBatchReader(final ImageFormatConfig config, final EasySubScan scan) {
+  public ImageBatchReader(final ImageFormatConfig config, final EasySubScan scan, FileSchemaNegotiator negotiator) {
     this.config = config;
     this.scan = scan;
-  }
-
-  @Override
-  public boolean open(FileSchemaNegotiator negotiator) {
+    this.errorContext = negotiator.parentErrorContext();
+    file = negotiator.file();
     try {
-      errorContext = negotiator.parentErrorContext();
-      DrillFileSystem dfs = negotiator.fileSystem();
-      path = dfs.makeQualified(negotiator.split().getPath());
-      fileStatus = dfs.getFileStatus(path);
-      metaInputStream = new BufferedInputStream(dfs.openPossiblyCompressedStream(path));
+      path = file.fileSystem().makeQualified(file.split().getPath());
+      fileStatus = file.fileSystem().getFileStatus(path);
+      metaInputStream = new BufferedInputStream(file.fileSystem().openPossiblyCompressedStream(path));
       logger.debug("The config is {}, root is {}, columns has {}", config, scan.getSelectionRoot(), scan.getColumns());
     } catch (IOException e) {
       throw UserException
@@ -94,7 +91,6 @@ public class ImageBatchReader implements ManagedReader<FileSchemaNegotiator> {
     loader = resultSetLoader.writer();
     // bind the writer for generic columns
     bindColumns(loader);
-    return true;
   }
 
   @Override
