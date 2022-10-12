@@ -75,7 +75,7 @@ public class LogBatchReader implements ManagedReader {
    * Write group values to value vectors.
    */
   private interface VectorWriter {
-    void loadVectors(Matcher m);
+    void loadVectors(Matcher m, int offset);
   }
 
   /**
@@ -95,11 +95,11 @@ public class LogBatchReader implements ManagedReader {
     }
 
     @Override
-    public void loadVectors(Matcher m) {
+    public void loadVectors(Matcher m, int offset) {
       for (int i = 0; i < m.groupCount(); i++) {
         String value = m.group(i + 1);
         if (value != null) {
-          writers[i].setString(value);
+          writers[i + offset].setString(value);
         }
       }
     }
@@ -117,7 +117,7 @@ public class LogBatchReader implements ManagedReader {
     }
 
    @Override
-    public void loadVectors(Matcher m) {
+    public void loadVectors(Matcher m, int offset) {
       for (int i = 0; i < m.groupCount(); i++) {
         String value = m.group(i + 1);
         elementWriter.setString(value == null ? "" : value);
@@ -127,6 +127,7 @@ public class LogBatchReader implements ManagedReader {
 
   private final LogReaderConfig config;
   private final FileDescrip file;
+  private final LogRegexProvider regexProvider;
   private BufferedReader reader;
   private ResultSetLoader loader;
   private VectorWriter vectorWriter;
@@ -139,6 +140,7 @@ public class LogBatchReader implements ManagedReader {
   public LogBatchReader(LogReaderConfig config, FileSchemaNegotiator negotiator) {
     this.config = config;
     this.file = negotiator.file();
+    this.regexProvider = new LogRegexProvider(config.pattern.pattern(), config.groupCount);
     negotiator.tableSchema(config.tableSchema, true);
     loader = negotiator.build();
     bindColumns(loader.writer());
@@ -224,21 +226,21 @@ public class LogBatchReader implements ManagedReader {
       return false;
     }
     lineNumber++;
-    Matcher lineMatcher = config.pattern.matcher(line);
+    Matcher lineMatcher = regexProvider.getMatcher(line);
     if (lineMatcher.matches()) {
 
       // Load matched row into vectors.
       if (saveMatchedRows) {
         rowWriter.start();
         rawColWriter.setString(line);
-        vectorWriter.loadVectors(lineMatcher);
+        vectorWriter.loadVectors(lineMatcher, regexProvider.getFieldOffset());
         rowWriter.save();
       }
       return true;
     }
 
     errorCount++;
-    if (errorCount < config.maxErrors) {
+    if (config.maxErrors == -1 || errorCount < config.maxErrors) {
       logger.warn("Unmatched line: {}", line);
     } else {
       throw UserException.parseError()

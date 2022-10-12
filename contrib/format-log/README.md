@@ -48,7 +48,7 @@ mapped to this configuration. Note that you can have multiple configurations
 of this plugin to allow you to query various log files. Required.
 * **maxErrors**: Log files can be inconsistent and messy. Specifies the
 number of errors the reader will ignore before
-halting execution with an error. Defaults to 10.
+halting execution with an error. Defaults to 10.  If `maxErrors` is set to `-1` Drill will ignore all errors.
 * **schema**: Defines the structure of
 the log file. Optional. If you do not define a schema, all
 fields will be assigned a column name of `field_n` where `n` is the index
