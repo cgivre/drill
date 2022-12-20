@@ -41,6 +41,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.drew.imaging.FileType;
@@ -55,7 +56,7 @@ import com.drew.metadata.xmp.XmpDirectory;
 
 public class ImageBatchReader implements ManagedReader {
 
-  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ImageBatchReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(ImageBatchReader.class);
 
   private final ImageFormatConfig config;
   private final EasySubScan scan;
