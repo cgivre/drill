@@ -68,14 +68,26 @@ public class FunctionCallFactory {
     return drillFuncName.equals(FunctionNames.AND) || drillFuncName.equals(FunctionNames.OR);
   }
 
-  /*
-   * create a cast function.
-   * arguments : type -- targetType
-   *             ep   -- input expression position
-   *             expr -- input expression
+  /**
+   * Create a CAST function
+   * @param type A {@link MajorType} of the target type
+   * @param ep A {@link ExpressionPosition} of the input expression position
+   * @param expr The input {@link LogicalExpression} expression
+   * @return A {@link LogicalExpression} of the CAST operation
    */
   public static LogicalExpression createCast(MajorType type, ExpressionPosition ep, LogicalExpression expr){
     return new CastExpression(expr, type, ep);
+  }
+
+  /**
+   * Create a SAFE_CAST function
+   * @param type A {@link MajorType} of the target type
+   * @param ep A {@link ExpressionPosition} of the input expression position
+   * @param expr The input {@link LogicalExpression} expression
+   * @return A {@link LogicalExpression} of the SAFE_CAST operation
+   */
+  public static LogicalExpression createSafeCast(MajorType type, ExpressionPosition ep, LogicalExpression expr) {
+    return new SafeCastExpression(expr, type, ep);
   }
 
   public static LogicalExpression createConvert(String function, String conversionType, LogicalExpression expr, ExpressionPosition ep) {

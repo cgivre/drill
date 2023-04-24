@@ -159,6 +159,7 @@ public class TypeInferenceUtils {
       .put(SqlKind.EXTRACT.name(), DrillExtractSqlReturnTypeInference.INSTANCE)
       .put("SQRT", DrillSqrtSqlReturnTypeInference.INSTANCE)
       .put(SqlKind.CAST.name(), DrillCastSqlReturnTypeInference.INSTANCE)
+      .put(SqlKind.SAFE_CAST.name(), DrillCastSqlReturnTypeInference.INSTANCE)
       .put("FLATTEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("KVGEN", DrillDeferToExecSqlReturnTypeInference.INSTANCE)
       .put("CONVERT_FROM", DrillDeferToExecSqlReturnTypeInference.INSTANCE)

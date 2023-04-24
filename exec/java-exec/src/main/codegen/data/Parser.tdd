@@ -813,6 +813,7 @@
 #     "ROWS"
       "ROW_NUMBER"
       "RUNNING"
+      "SAFE_CAST"
       "SAVEPOINT"
       "SCHEMA"
       "SCOPE"

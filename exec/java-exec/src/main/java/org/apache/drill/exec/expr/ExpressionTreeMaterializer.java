@@ -39,6 +39,7 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
@@ -914,6 +915,47 @@ public class ExpressionTreeMaterializer {
 
       FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
       return fc.accept(this, functionLookupContext);
+    }
+
+    @Override
+    public LogicalExpression visitSafeCastExpression(SafeCastExpression e, FunctionLookupContext functionLookupContext) {
+      // if the cast is pointless, remove it.
+      LogicalExpression input = e.getInput().accept(this,  functionLookupContext);
+
+      MajorType newMajor = e.getMajorType(); // Output type
+      MinorType newMinor = input.getMajorType().getMinorType(); // Input type
+
+      if (castEqual(e.getPosition(), input.getMajorType(), newMajor)) {
+        return input; // don't do pointless cast.
+      }
+
+      if (newMinor == MinorType.LATE) {
+        // if the type still isn't fully bound, leave as cast expression.
+        return new SafeCastExpression(input, e.getMajorType(), e.getPosition());
+      } else if (newMinor == MinorType.NULL) {
+        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly
+        // preserve original precision and scale if present
+        return new TypedNullConstant(e.getMajorType().toBuilder().setMode(DataMode.OPTIONAL).build());
+      } else {
+        // if the type is fully bound, convert to functioncall and materialze the function.
+        MajorType type = e.getMajorType();
+
+        // Get the cast function name from the map
+        String castFuncWithType = FunctionReplacementUtils.getSafeCastFunc(type.getMinorType());
+
+        List<LogicalExpression> newArgs = new ArrayList<>();
+        newArgs.add(input);  //input_expr
+
+        if (Types.isDecimalType(type)) {
+          newArgs.add(new ValueExpressions.IntExpression(type.getPrecision(), null));
+          newArgs.add(new ValueExpressions.IntExpression(type.getScale(), null));
+        } else if (!Types.isFixedWidthType(type)) { //VarLen type
+          newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
+        }
+
+        FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
+        return fc.accept(this, functionLookupContext);
+      }
     }
 
     @Override

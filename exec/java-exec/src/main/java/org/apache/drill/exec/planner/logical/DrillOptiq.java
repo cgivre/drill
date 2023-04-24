@@ -225,7 +225,9 @@ public class DrillOptiq {
       case SPECIAL:
         switch(call.getKind()){
         case CAST:
-          return getDrillCastFunctionFromOptiq(call);
+          return getDrillCastFunctionFromOptiq(call, false);
+        case SAFE_CAST:
+          return getDrillCastFunctionFromOptiq(call, true);
         case ROW:
           List<RelDataTypeField> fieldList = call.getType().getFieldList();
           List<RexNode> oldOperands = call.getOperands();
@@ -300,7 +302,8 @@ public class DrillOptiq {
       RexNode operand = call.getOperands().get(1);
       if (operand instanceof RexLiteral) {
         literal = (RexLiteral) operand;
-      } else if (isMap && operand.getKind() == SqlKind.CAST) {
+      } else if (isMap &&
+          (operand.getKind() == SqlKind.CAST || operand.getKind() == SqlKind.SAFE_CAST)) {
         SqlTypeName castType = operand.getType().getSqlTypeName();
         SqlTypeName keyType = dataType.getKeyType().getSqlTypeName();
         Preconditions.checkArgument(castType == keyType,
@@ -483,7 +486,7 @@ public class DrillOptiq {
       return logicalRef.getChild(fieldAccess.getField().getName());
     }
 
-    private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){
+    private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call, boolean safeCast) {
       LogicalExpression arg = call.getOperands().get(0).accept(this);
       MajorType castType;
 
@@ -545,6 +548,11 @@ public class DrillOptiq {
         default:
           castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
+
+      if (safeCast) {
+        return FunctionCallFactory.createSafeCast(castType, ExpressionPosition.UNKNOWN, arg);
+      }
+
       return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
     }
 

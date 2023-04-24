@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
@@ -281,6 +282,17 @@ class EqualityVisitor extends AbstractExprVisitor<Boolean,LogicalExpression,Runt
   @Override
   public Boolean visitCastExpression(CastExpression e, LogicalExpression value) throws RuntimeException {
     if (!(value instanceof CastExpression)) {
+      return false;
+    }
+    if (!e.getMajorType().equals(value.getMajorType())) {
+      return false;
+    }
+    return checkChildren(e, value);
+  }
+
+  @Override
+  public Boolean visitSafeCastExpression(SafeCastExpression e, LogicalExpression value) throws RuntimeException {
+    if (!(value instanceof SafeCastExpression)) {
       return false;
     }
     if (!e.getMajorType().equals(value.getMajorType())) {

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.index;
 
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -122,6 +123,16 @@ public class PathInExpr extends AbstractExprVisitor<Boolean,Void,RuntimeExceptio
     }
     return castExpr.getInput().accept(this, null);
   }
+
+  @Override
+  public Boolean visitSafeCastExpression(SafeCastExpression castExpr, Void value) throws RuntimeException {
+    if (preProcess(castExpr)) {
+      //when it is true, we know this is exactly the indexed expression, no more deep search
+      return true;
+    }
+    return castExpr.getInput().accept(this, null);
+  }
+
 
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, Void value) throws RuntimeException {

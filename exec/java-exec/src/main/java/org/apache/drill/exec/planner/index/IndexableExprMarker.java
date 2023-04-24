@@ -204,7 +204,7 @@ public class IndexableExprMarker extends RexVisitorImpl<Boolean> {
       if ("ITEM".equals(call.getOperator().getName())) {
         return directCompareOp;
       }
-      else if (call.getKind() == SqlKind.CAST) {
+      else if (call.getKind() == SqlKind.CAST || call.getKind() == SqlKind.SAFE_CAST) {
         //For now, we care only direct CAST: CAST's operand is a field(schemaPath),
         // either ITEM call(nested name) or inputRef
 

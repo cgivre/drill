@@ -28,6 +28,7 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
@@ -170,6 +171,11 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitCastExpression(CastExpression e, ErrorCollector errors) {
+    return e.getInput().accept(this, errors);
+  }
+
+  @Override
+  public Boolean visitSafeCastExpression(SafeCastExpression e, ErrorCollector errors) {
     return e.getInput().accept(this, errors);
   }
 

@@ -152,7 +152,7 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
 
     String funcName = ((DrillSimpleFuncHolder) funcHolder).getRegisteredNames()[0];
 
-    if (FunctionReplacementUtils.isCastFunction(funcName)) {
+    if (FunctionReplacementUtils.isCastFunction(funcName) || FunctionReplacementUtils.isSafeCastFunction(funcName)) {
       ColumnStatistics<T> stat = (ColumnStatistics<T>) holderExpr.args.get(0).accept(this, null);
       if (!IsPredicate.isNullOrEmpty(stat)) {
         return evalCastFunc(holderExpr, stat);

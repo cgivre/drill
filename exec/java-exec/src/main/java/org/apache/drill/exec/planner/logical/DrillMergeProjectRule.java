@@ -146,9 +146,9 @@ public class DrillMergeProjectRule extends RelOptRule {
   public static List<RexNode> simplifyCast(List<RexNode> projectExprs) {
     final List<RexNode> list = new ArrayList<>();
     for (RexNode rex: projectExprs) {
-      if (rex.getKind() == SqlKind.CAST) {
+      if (rex.getKind() == SqlKind.CAST || rex.getKind() == SqlKind.SAFE_CAST) {
         RexNode operand = ((RexCall) rex).getOperands().get(0);
-        while (operand.getKind() == SqlKind.CAST
+        while ((operand.getKind() == SqlKind.CAST || operand.getKind() == SqlKind.SAFE_CAST)
             && operand.getType().equals(rex.getType())) {
           rex = operand;
           operand = ((RexCall) rex).getOperands().get(0);

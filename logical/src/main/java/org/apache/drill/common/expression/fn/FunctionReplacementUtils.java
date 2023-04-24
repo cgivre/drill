@@ -31,6 +31,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 public class FunctionReplacementUtils {
 
   private static final Map<MinorType, String> TYPE_TO_CAST_FUNC = new HashMap<>();
+  private static final Map<MinorType, String> TYPE_TO_SAFE_CAST_FUNC = new HashMap<>();
+
   // Maps function to supported input types for substitution
   private static final Map<String, Set<MinorType>> FUNC_TO_INPUT_TYPES = new HashMap<>();
   /**
@@ -53,6 +55,7 @@ public class FunctionReplacementUtils {
 
   static {
     initCastFunctionSubstitutions();
+    initSafeCastFunctionSubstitutions();
     initToFunctionSubstitutions();
   }
 
@@ -102,6 +105,52 @@ public class FunctionReplacementUtils {
     setupReplacementFunctionsForCast(MinorType.INTERVALYEAR, "NullableINTERVALYEAR");
   }
 
+  private static void initSafeCastFunctionSubstitutions() {
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.UNION, "safe_castUNION");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.BIGINT, "safe_castBIGINT");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.INT, "safe_castINT");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.BIT, "safe_castBIT");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.TINYINT, "safe_castTINYINT");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.FLOAT4, "safe_castFLOAT4");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.FLOAT8, "safe_castFLOAT8");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.VARCHAR, "safe_castVARCHAR");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.VAR16CHAR, "safe_castVAR16CHAR");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.VARBINARY, "safe_castVARBINARY");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.DATE, "safe_castDATE");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.TIME, "safe_castTIME");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.TIMESTAMP, "safe_castTIMESTAMP");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.TIMESTAMPTZ, "safe_castTIMESTAMPTZ");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.INTERVALDAY, "safe_castINTERVALDAY");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.INTERVALYEAR, "safe_castINTERVALYEAR");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.INTERVAL, "safe_castINTERVAL");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.DECIMAL9, "safe_castDECIMAL9");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.DECIMAL18, "safe_castDECIMAL18");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.DECIMAL28SPARSE, "safe_castDECIMAL28SPARSE");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.DECIMAL28DENSE, "safe_castDECIMAL28DENSE");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.DECIMAL38SPARSE, "safe_castDECIMAL38SPARSE");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.DECIMAL38DENSE, "safe_castDECIMAL38DENSE");
+    TYPE_TO_SAFE_CAST_FUNC.put(MinorType.VARDECIMAL, "safe_castVARDECIMAL");
+
+    // Numeric types
+    setupReplacementFunctionsForCast(MinorType.INT, "NullableINT",true);
+    setupReplacementFunctionsForCast(MinorType.BIGINT, "NullableBIGINT",true);
+    setupReplacementFunctionsForCast(MinorType.FLOAT4, "NullableFLOAT4",true);
+    setupReplacementFunctionsForCast(MinorType.FLOAT8, "NullableFLOAT8",true);
+    setupReplacementFunctionsForCast(MinorType.DECIMAL9, "NullableDECIMAL9",true);
+    setupReplacementFunctionsForCast(MinorType.DECIMAL18, "NullableDECIMAL18",true);
+    setupReplacementFunctionsForCast(MinorType.DECIMAL28SPARSE, "NullableDECIMAL28SPARSE",true);
+    setupReplacementFunctionsForCast(MinorType.DECIMAL38SPARSE, "NullableDECIMAL38SPARSE",true);
+    setupReplacementFunctionsForCast(MinorType.VARDECIMAL, "NullableVARDECIMAL",true);
+    // date/time types
+    setupReplacementFunctionsForCast(MinorType.DATE, "NULLABLEDATE",true);
+    setupReplacementFunctionsForCast(MinorType.TIME, "NULLABLETIME",true);
+    setupReplacementFunctionsForCast(MinorType.TIMESTAMP, "NULLABLETIMESTAMP",true);
+    // interval types
+    setupReplacementFunctionsForCast(MinorType.INTERVAL, "NullableINTERVAL",true);
+    setupReplacementFunctionsForCast(MinorType.INTERVALDAY, "NullableINTERVALDAY",true);
+    setupReplacementFunctionsForCast(MinorType.INTERVALYEAR, "NullableINTERVALYEAR",true);
+  }
+
   private static void initToFunctionSubstitutions() {
     setupReplacementFunctionsForTo("to_number", "ToNumber");
 
@@ -115,7 +164,18 @@ public class FunctionReplacementUtils {
   }
 
   private static void setupReplacementFunctionsForCast(MinorType type, String toSuffix) {
-    String functionName = TYPE_TO_CAST_FUNC.get(type);
+    setupReplacementFunctionsForCast(type, toSuffix, false);
+  }
+
+  private static void setupReplacementFunctionsForCast(MinorType type, String toSuffix, boolean safe) {
+    String functionName;
+
+    // Remap SAFE_CAST
+    if (safe) {
+      functionName = TYPE_TO_SAFE_CAST_FUNC.get(type);
+    } else {
+      functionName = TYPE_TO_CAST_FUNC.get(type);
+    }
 
     FUNC_REPLACEMENT_NEEDED.add(functionName);
     Set<MinorType> supportedInputTypes = new HashSet<>(
@@ -156,6 +216,22 @@ public class FunctionReplacementUtils {
   }
 
   /**
+   * Given the target type, get the appropriate cast function
+   * @param targetMinorType the target data type
+   * @return the name of cast function
+   */
+  public static String getSafeCastFunc(MinorType targetMinorType) {
+    String func = TYPE_TO_SAFE_CAST_FUNC.get(targetMinorType);
+    if (func != null) {
+      return func;
+    }
+
+    throw new IllegalArgumentException(
+        String.format("cast function for type %s is not defined", targetMinorType.name()));
+  }
+
+
+  /**
   * Get a replacing function for the original function, based on the specified data mode
   * @param functionName original function name
   * @param dataMode data mode of the input data
@@ -192,7 +268,16 @@ public class FunctionReplacementUtils {
    * @return {@code true} if function is CAST function, {@code false} otherwise
    */
   public static boolean isCastFunction(String functionName) {
-    return TYPE_TO_CAST_FUNC.values().contains(functionName);
+    return TYPE_TO_CAST_FUNC.containsValue(functionName);
+  }
+
+  /**
+   * Check if a function is a safe_cast function.
+   * @param functionName name of the function
+   * @return {@code true} if function is CAST function, {@code false} otherwise
+   */
+  public static boolean isSafeCastFunction(String functionName) {
+    return TYPE_TO_SAFE_CAST_FUNC.containsValue(functionName);
   }
 
   private static String getReplacingFunctionFromNonNullable(String functionName, MinorType inputType) {

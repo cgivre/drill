@@ -32,6 +32,7 @@ import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -65,6 +66,7 @@ import static org.apache.drill.common.types.TypeProtos.MinorType.VARDECIMAL;
 import static org.apache.drill.exec.ExecTest.mockUtcDateTimeZone;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @Category({UnlikelyTest.class, SqlFunctionTest.class})
 public class TestCastFunctions extends ClusterTest {
@@ -713,7 +715,7 @@ public class TestCastFunctions extends ClusterTest {
 
     Assert.assertEquals(
         "Casting literal string as INTERVAL should yield the same result for each row", 1, results.size());
-    Assert.assertThat(results, hasItem("2 years 7 months"));
+    assertThat(results, hasItem("2 years 7 months"));
   }
 
   @Test
@@ -819,6 +821,14 @@ public class TestCastFunctions extends ClusterTest {
           .go();
     }
   }
+
+  @Test
+  public void testSimpleSafeCast() throws Exception {
+    String sql = "SELECT SAFE_CAST('5.0' AS FLOAT) FROM (VALUES(1))";
+    RowSet results = queryBuilder().sql(sql).rowSet();
+    results.print();
+  }
+
 
   private static Map<String, TypeProtos.MajorType> createCastTypeMap() {
     TypeProtos.DataMode mode = TypeProtos.DataMode.OPTIONAL;

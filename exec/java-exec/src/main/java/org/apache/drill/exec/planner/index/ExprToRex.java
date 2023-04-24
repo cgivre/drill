@@ -26,6 +26,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
@@ -97,4 +98,19 @@ public class ExprToRex extends AbstractExprVisitor<RexNode, Void, RuntimeExcepti
     return builder.makeCast(targetType, convertedInput);
   }
 
+  @Override
+  public RexNode visitSafeCastExpression(SafeCastExpression e, Void value) throws RuntimeException {
+    RexNode convertedInput = e.getInput().accept(this, null);
+    String typeStr = e.getMajorType().getMinorType().toString();
+
+    if (SqlTypeName.get(typeStr) == null) {
+      logger.debug("SqlTypeName could not find {}", typeStr);
+    }
+
+    SqlTypeName typeName = TypeInferenceUtils.getCalciteTypeFromDrillType(e.getMajorType().getMinorType());
+
+    RelDataType targetType = TypeInferenceUtils.createCalciteTypeWithNullability(
+        inputRel.getCluster().getTypeFactory(), typeName, true);
+    return builder.makeCast(targetType, convertedInput, true, true);
+  }
 }

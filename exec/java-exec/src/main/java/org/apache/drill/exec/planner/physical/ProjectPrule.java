@@ -139,7 +139,7 @@ public class ProjectPrule extends Prule {
       // For distribution, either $0 or cast($0 as ...) would keep the distribution after projection.
       if (node.e instanceof RexInputRef) {
         m.put( ((RexInputRef) node.e).getIndex(), node.i);
-      } else if (node.e.isA(SqlKind.CAST)) {
+      } else if (node.e.isA(SqlKind.CAST) || node.e.isA(SqlKind.SAFE_CAST)) {
         RexNode operand = ((RexCall) node.e).getOperands().get(0);
         if (operand instanceof RexInputRef) {
           m.put(((RexInputRef) operand).getIndex(), node.i);

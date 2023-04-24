@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
@@ -73,6 +74,7 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   T visitNullExpression(NullExpression e, VAL value) throws EXCEP;
   T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
   T visitCastExpression(CastExpression e, VAL value) throws EXCEP;
+  T visitSafeCastExpression(SafeCastExpression e, VAL value) throws EXCEP;
   T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP;
   T visitParameter(ParameterExpression e, VAL value) throws EXCEP;
   T visitTypedFieldExpr(TypedFieldExpr e, VAL value) throws EXCEP;

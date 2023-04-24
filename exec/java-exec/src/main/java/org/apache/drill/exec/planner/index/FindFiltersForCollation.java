@@ -143,7 +143,7 @@ public class FindFiltersForCollation extends RexVisitorImpl<Boolean> {
       for (RexNode n : call.getOperands()) {
         n.accept(this);
       }
-    } else if (kind == SqlKind.CAST) {
+    } else if (kind == SqlKind.CAST || kind == SqlKind.SAFE_CAST) {
       // For the filter analyzer itself, if the Project has not been pushed
       // down below the Filter, then CAST is present in the filter condition.
       // Return True for such case since CAST exprs are valid for collation.

@@ -15,30 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.common.expression;
 
-import java.util.Collections;
-import java.util.Iterator;
-
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
-import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
-
-public class CastExpression extends LogicalExpressionBase implements Iterable<LogicalExpression>{
-
-  protected final LogicalExpression input;
-  protected final MajorType type;
-
-  public CastExpression(LogicalExpression input, MajorType type, ExpressionPosition pos) {
-    super(pos);
-    this.input = input;
-    this.type = checkNotNull(type, "Major type cannot be null");
+public class SafeCastExpression extends CastExpression {
+  public SafeCastExpression(LogicalExpression input, MajorType type, ExpressionPosition pos) {
+    super(input, type, pos);
   }
 
   @Override
   public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
-    return visitor.visitCastExpression(this, value);
+    return visitor.visitSafeCastExpression(this, value);
   }
 
   @Override
@@ -49,37 +40,25 @@ public class CastExpression extends LogicalExpressionBase implements Iterable<Lo
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof CastExpression)) {
+    if (!(obj instanceof SafeCastExpression)) {
       return false;
     }
 
-    CastExpression other = (CastExpression) obj;
-
-    return this.input.equals(other.input) && (this.getMajorType().hasMinorType() == other.getMajorType().hasMinorType());
+    SafeCastExpression other = (SafeCastExpression) obj;
+    return this.input.equals(other.input) &&
+        (this.getMajorType().hasMinorType() == other.getMajorType().hasMinorType());
   }
 
   @Override
   public int hashCode() {
-    //for now we ignore type's other attributes
     return (input.hashCode() << 8) + (0x00ff & type.getMinorType().getNumber());
   }
 
   @Override
-  public Iterator<LogicalExpression> iterator() {
-    return Collections.singleton(input).iterator();
-  }
-
-  public LogicalExpression getInput() {
-    return input;
-  }
-
-  @Override
-  public MajorType getMajorType() {
-    return type;
-  }
-
-  @Override
   public String toString() {
-    return "CastExpression [input=" + input + ", type=" + type + "]";
+    return new PlanStringBuilder(this)
+        .field("input", input)
+        .field("type", type)
+        .toString();
   }
 }

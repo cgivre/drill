@@ -31,6 +31,7 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpression, Void, RuntimeException> {
@@ -85,6 +86,12 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
   @Override
   public LogicalExpression visitCastExpression(CastExpression cast, Void value) throws RuntimeException {
     throw new UnsupportedOperationException("CastExpression is not expected here. "
+        + "It should have been converted to FunctionHolderExpression in materialization");
+  }
+
+  @Override
+  public LogicalExpression visitSafeCastExpression(SafeCastExpression cast, Void value) throws RuntimeException {
+    throw new UnsupportedOperationException("SafeCastExpression is not expected here. "
         + "It should have been converted to FunctionHolderExpression in materialization");
   }
 

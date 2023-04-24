@@ -323,6 +323,69 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   }
 
   @Override
+  public Void visitSafeCastExpression(SafeCastExpression e, StringBuilder sb) throws RuntimeException {
+    MajorType mt = e.getMajorType();
+
+    sb.append("safe_cast( (");
+    e.getInput().accept(this, sb);
+    sb.append(" ) as ");
+    sb.append(mt.getMinorType().name());
+
+    switch(mt.getMinorType()) {
+      case FLOAT4:
+      case FLOAT8:
+      case BIT:
+      case INT:
+      case TINYINT:
+      case SMALLINT:
+      case BIGINT:
+      case UINT1:
+      case UINT2:
+      case UINT4:
+      case UINT8:
+      case DATE:
+      case TIMESTAMP:
+      case TIMESTAMPTZ:
+      case TIME:
+      case INTERVAL:
+      case INTERVALDAY:
+      case INTERVALYEAR:
+        // do nothing else.
+        break;
+      case VAR16CHAR:
+      case VARBINARY:
+      case VARCHAR:
+      case FIXED16CHAR:
+      case FIXEDBINARY:
+      case FIXEDCHAR:
+
+        // add size in parens
+        sb.append("(");
+        sb.append(mt.getPrecision());
+        sb.append(")");
+        break;
+      case DECIMAL9:
+      case DECIMAL18:
+      case DECIMAL28DENSE:
+      case DECIMAL28SPARSE:
+      case DECIMAL38DENSE:
+      case DECIMAL38SPARSE:
+      case VARDECIMAL:
+        // add scale and precision
+        sb.append("(");
+        sb.append(mt.getPrecision());
+        sb.append(", ");
+        sb.append(mt.getScale());
+        sb.append(")");
+        break;
+      default:
+        throw new UnsupportedOperationException(String.format("Unable to convert cast expression %s into string.", e));
+    }
+    sb.append(" )");
+    return null;
+  }
+
+  @Override
   public Void visitFloatConstant(FloatExpression fExpr, StringBuilder sb) throws RuntimeException {
     sb.append(fExpr.getFloat());
     return null;

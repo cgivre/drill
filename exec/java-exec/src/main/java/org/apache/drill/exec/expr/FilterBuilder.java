@@ -250,7 +250,7 @@ public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<Lo
       return handleCompareFunction(funcHolderExpr, value);
     } else if (isIsFunction(funcName) || isNot(funcHolderExpr, funcName)) {
       return handleIsFunction(funcHolderExpr, value);
-    } else if (FunctionReplacementUtils.isCastFunction(funcName)) {
+    } else if (FunctionReplacementUtils.isCastFunction(funcName) || FunctionReplacementUtils.isSafeCastFunction(funcName)) {
       List<LogicalExpression> newArgs = generateNewExpressions(funcHolderExpr.args, value);
       if (newArgs == null) {
         return null;

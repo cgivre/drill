@@ -25,6 +25,7 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -150,6 +151,10 @@ public class HashVisitor extends AbstractExprVisitor<Integer,Void,RuntimeExcepti
   @Override
   public Integer visitCastExpression(CastExpression e, Void value) throws RuntimeException {
     return compute(e, 21);
+  }
+
+  public Integer visitSafeCastExpression(SafeCastExpression e, Void value) throws RuntimeException {
+    return compute(e,27);
   }
 
   @Override

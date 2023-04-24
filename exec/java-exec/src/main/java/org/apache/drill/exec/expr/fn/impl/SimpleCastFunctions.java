@@ -28,6 +28,8 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.NullableBitHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 
@@ -51,6 +53,32 @@ public class SimpleCastFunctions {
     }
   }
 
+  @FunctionTemplate(names = {"safe_castBIT", "safe_castBOOLEAN"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls=NullHandling.NULL_IF_NULL)
+  public static class SafeCastVarCharBoolean implements DrillSimpleFunc {
+
+    @Param VarCharHolder in;
+    @Output
+    NullableBitHolder out;
+
+    public void setup() {
+      // No op
+    }
+
+    public void eval() {
+      try {
+        byte[] buf = new byte[in.end - in.start];
+        in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
+        String input = new String(buf, com.google.common.base.Charsets.UTF_8);
+        out.value = org.apache.drill.common.types.BooleanType.get(input).getNumericValue();
+      } catch (java.lang.Exception e) {
+        // If anything goes wrong, do nothing which will return null.
+      }
+    }
+  }
+
+
   @FunctionTemplate(name = "castVARCHAR",
       scope = FunctionTemplate.FunctionScope.SIMPLE,
       returnType = FunctionTemplate.ReturnType.STRING_CAST,
@@ -71,6 +99,35 @@ public class SimpleCastFunctions {
       out.buffer = buffer;
       out.start = 0;
       out.end = Math.min((int)len.value, outB.length); // truncate if target type has length smaller than that of input's string
+    }
+  }
+
+  @FunctionTemplate(name = "safe_castVARCHAR",
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      returnType = FunctionTemplate.ReturnType.STRING_CAST,
+      nulls = NullHandling.NULL_IF_NULL,
+      outputWidthCalculatorType = FunctionTemplate.OutputWidthCalculatorType.CUSTOM_CLONE_DEFAULT)
+  public static class SafeCastBooleanVarChar implements DrillSimpleFunc {
+
+    @Param BitHolder in;
+    @Param BigIntHolder len;
+    @Output
+    NullableVarCharHolder out;
+    @Inject DrillBuf buffer;
+
+    public void setup() {}
+
+    public void eval() {
+      try {
+        byte[] outB = org.apache.drill.common.types.BooleanType.get(String.valueOf(in.value)).name().toLowerCase().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        buffer.setBytes(0, outB);
+        out.buffer = buffer;
+        out.start = 0;
+        out.end = Math.min((int) len.value, outB.length); // truncate if target type has length smaller than that of input's string
+      } catch (Exception e) {
+        // Clear out the buffer
+        buffer.clear();
+      }
     }
   }
 }

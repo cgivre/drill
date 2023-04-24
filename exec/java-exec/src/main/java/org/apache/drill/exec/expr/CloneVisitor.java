@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
@@ -178,6 +179,11 @@ public class CloneVisitor extends AbstractExprVisitor<LogicalExpression,Void,Run
 
   @Override
   public LogicalExpression visitCastExpression(CastExpression e, Void value) throws RuntimeException {
+    return visitUnknown(e, value);
+  }
+
+  @Override
+  public LogicalExpression visitSafeCastExpression(SafeCastExpression e, Void value) throws RuntimeException {
     return visitUnknown(e, value);
   }
 

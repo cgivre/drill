@@ -44,6 +44,7 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -73,6 +74,7 @@ import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
@@ -999,6 +1001,12 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitCastExpression(CastExpression e, ClassGenerator<?> value) throws RuntimeException {
       throw new UnsupportedOperationException("CastExpression is not expected here. "
+          + "It should have been converted to FunctionHolderExpression in materialization");
+    }
+
+    @Override
+    public HoldingContainer visitSafeCastExpression(SafeCastExpression e, ClassGenerator<?> value) throws RuntimeException {
+      throw new UnsupportedOperationException("SafeCastExpression is not expected here. "
           + "It should have been converted to FunctionHolderExpression in materialization");
     }
 

@@ -31,6 +31,7 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedFieldExpr;
 import org.apache.drill.common.expression.TypedNullConstant;
@@ -210,6 +211,12 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
 
   @Override
   public Boolean visitCastExpression(CastExpression e, IdentityHashMap<LogicalExpression, Object> value)
+      throws RuntimeException {
+    return e.getInput().accept(this, value);
+  }
+
+  @Override
+  public Boolean visitSafeCastExpression(SafeCastExpression e, IdentityHashMap<LogicalExpression, Object> value)
       throws RuntimeException {
     return e.getInput().accept(this, value);
   }
