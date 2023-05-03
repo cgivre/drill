@@ -1424,6 +1424,16 @@ public class EvaluationVisitor {
     }
 
     @Override
+    public HoldingContainer visitSafeCastExpression(SafeCastExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer hc = getPrevious(e, generator.getMappingSet());
+      if (hc == null) {
+        hc = super.visitSafeCastExpression(e, generator);
+        put(e, hc, generator.getMappingSet());
+      }
+      return hc;
+    }
+
+    @Override
     public HoldingContainer visitConvertExpression(ConvertExpression e, ClassGenerator<?> generator) throws RuntimeException {
       HoldingContainer hc = getPrevious(e, generator.getMappingSet());
       if (hc == null) {

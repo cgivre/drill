@@ -227,7 +227,7 @@ public class FunctionReplacementUtils {
     }
 
     throw new IllegalArgumentException(
-        String.format("cast function for type %s is not defined", targetMinorType.name()));
+        String.format("safe_cast function for type %s is not defined", targetMinorType.name()));
   }
 
 

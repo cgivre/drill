@@ -47,6 +47,8 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.util.NlsString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class rewrites all the project expression that contain convert_to/ convert_from
@@ -58,7 +60,7 @@ import org.apache.calcite.util.NlsString;
  */
 public class PreProcessLogicalRel extends RelShuttleImpl {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PreProcessLogicalRel.class);
+  private static final Logger logger = LoggerFactory.getLogger(PreProcessLogicalRel.class);
 
   private final RelDataTypeFactory factory;
   private final DrillOperatorTable table;

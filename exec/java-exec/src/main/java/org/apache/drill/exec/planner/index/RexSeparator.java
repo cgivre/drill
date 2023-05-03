@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.index;
 
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
@@ -65,6 +66,12 @@ public class RexSeparator {
         }
         else if (relevantExpr instanceof CastExpression) {
           final CastExpression castExprInFilter = (CastExpression) relevantExpr;
+          if (castExprInFilter.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR
+              && (castExprInFilter.getMajorType().getPrecision() > relatedPaths.get(idxFound).getMajorType().getPrecision())) {
+            continue;
+          }
+        } else if (relevantExpr instanceof SafeCastExpression) {
+          final SafeCastExpression castExprInFilter = (SafeCastExpression) relevantExpr;
           if (castExprInFilter.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR
               && (castExprInFilter.getMajorType().getPrecision() > relatedPaths.get(idxFound).getMajorType().getPrecision())) {
             continue;

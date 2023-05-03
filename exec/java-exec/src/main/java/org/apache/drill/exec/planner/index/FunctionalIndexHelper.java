@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.planner.index;
 
+import org.apache.drill.common.expression.SafeCastExpression;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -193,7 +194,7 @@ public class FunctionalIndexHelper {
         CastExpression expr = (CastExpression) entry.getValue();
         //whether this cast varchar/char expression is indexed even the length is not the same
         for (LogicalExpression indexed : indexedExprs.keySet()) {
-          if (indexed instanceof CastExpression) {
+          if (indexed instanceof CastExpression || indexed instanceof SafeCastExpression) {
             final CastExpression indexedCast = (CastExpression) indexed;
             if (expr.getInput().equals(indexedCast.getInput())
                 && expr.getMajorType().getMinorType().equals(indexedCast.getMajorType().getMinorType())
