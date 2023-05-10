@@ -52,9 +52,8 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
     startCluster(builder);
   }
 
-  @Ignore
-  @Test // DRILL-3610
-  public void testTimestampAddDiffLiteralTypeInference() throws Exception {
+  @Test
+  public void testTimestampAddLiteralTypeInference() throws Exception {
     Map<String, String> dateTypes = new HashMap<>();
     dateTypes.put("DATE", "2013-03-31");
     dateTypes.put("TIME", "00:02:03.123");
@@ -64,8 +63,23 @@ public class TestTimestampAddDiffFunctions extends ClusterTest {
       for (Map.Entry<String, String> typeResultPair : dateTypes.entrySet()) {
         String dateTimeLiteral = typeResultPair.getValue();
         String type = typeResultPair.getKey();
-
+        System.out.println(String.format("SELECT TIMESTAMPADD(%s, 0, CAST('%s' AS %s)) col1", qualifier, dateTimeLiteral, type));
         run("SELECT TIMESTAMPADD(%s, 0, CAST('%s' AS %s)) col1", qualifier, dateTimeLiteral, type);
+      }
+    }
+  }
+
+  @Test
+  public void testTimestampDiffLiteralTypeInference() throws Exception {
+    Map<String, String> dateTypes = new HashMap<>();
+    dateTypes.put("DATE", "2013-03-31");
+    dateTypes.put("TIME", "00:02:03.123");
+    dateTypes.put("TIMESTAMP", "2013-03-31 00:02:03");
+
+    for (String qualifier : QUALIFIERS) {
+      for (Map.Entry<String, String> typeResultPair : dateTypes.entrySet()) {
+        String dateTimeLiteral = typeResultPair.getValue();
+        String type = typeResultPair.getKey();
 
         // TIMESTAMPDIFF with args of different types
         for (Map.Entry<String, String> secondArg : dateTypes.entrySet()) {
