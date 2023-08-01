@@ -58,7 +58,7 @@ import java.util.Stack;
 
 public class XMLReader implements Closeable {
   private static final Logger logger = LoggerFactory.getLogger(XMLReader.class);
-  private static final String ATTRIBUTE_MAP_NAME = "attributes";
+  public static final String ATTRIBUTE_MAP_NAME = "attributes";
 
   private final Stack<String> fieldNameStack;
   private final Stack<TupleWriter> rowWriterStack;
