@@ -85,7 +85,7 @@ public class XMLReader implements Closeable {
 
   /**
    * This field indicates the various states in which the reader operates. The names should be self-explanatory,
-   * but they are used as the reader iterates over the XML tags to know what to do.
+   * and they are used as the reader iterates over the XML tags to know what to do.
    */
   private enum xmlState {
     ROW_STARTED,

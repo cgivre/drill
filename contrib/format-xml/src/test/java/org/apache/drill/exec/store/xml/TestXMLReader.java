@@ -52,7 +52,7 @@ public class TestXMLReader extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    XMLFormatConfig formatConfig = new XMLFormatConfig(null, 2, true);
+    XMLFormatConfig formatConfig = new XMLFormatConfig(null, 2, true, false);
     cluster.defineFormat("cp", "xml", formatConfig);
     cluster.defineFormat("dfs", "xml", formatConfig);
 

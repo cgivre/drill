@@ -6,6 +6,9 @@ Aside from the file extension, there is one configuration option:
 
 * `dataLevel`: XML data often contains a considerable amount of nesting which is not necesarily useful for data analysis. This parameter allows you to set the nesting level
   where the data actually starts.  The levels start at `1`.
+* `allTextMode`:  When set to true, Drill will not attempt to infer data types.  Defaults to `true`.
+* `useXSD`:  When set to `true`, if the XML file has an associated XSD schema file, Drill will
+  download that file and use that for the schema.  Defaults to `false`.
 
 The default configuration is shown below:
 
@@ -16,6 +19,7 @@ The default configuration is shown below:
     "xml"
   ],
   "allTextMode": true,
+  "useXSD": false,
   "dataLevel": 2
 }
 ```

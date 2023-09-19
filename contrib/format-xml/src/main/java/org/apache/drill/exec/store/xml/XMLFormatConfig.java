@@ -35,19 +35,22 @@ public class XMLFormatConfig implements FormatPluginConfig {
 
   public final List<String> extensions;
   public final int dataLevel;
-
-  @JsonProperty
   public final boolean allTextMode;
+  public final boolean useXSD;
 
   public XMLFormatConfig(@JsonProperty("extensions") List<String> extensions,
                         @JsonProperty("dataLevel") int dataLevel,
-                        @JsonProperty("allTextMode") Boolean allTextMode
+                        @JsonProperty("allTextMode") Boolean allTextMode,
+                        @JsonProperty("useXSD") Boolean useXSD
       ) {
     this.extensions = extensions == null ? Collections.singletonList("xml") : ImmutableList.copyOf(extensions);
     this.dataLevel = Math.max(dataLevel, 1);
 
     // Default to true
     this.allTextMode = allTextMode == null || allTextMode;
+
+    // Default to false
+    this.useXSD = useXSD != null && useXSD;
   }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -56,13 +59,20 @@ public class XMLFormatConfig implements FormatPluginConfig {
   }
 
   @JsonProperty("allTextMode")
+  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public boolean allTextMode() {
     return allTextMode;
   }
 
+  @JsonProperty("useXSD")
+  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  public boolean useXSD() {
+    return useXSD;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(extensions, dataLevel, allTextMode);
+    return Objects.hash(extensions, dataLevel, allTextMode, useXSD);
   }
 
   public XMLBatchReader.XMLReaderConfig getReaderConfig(XMLFormatPlugin plugin) {
@@ -80,7 +90,8 @@ public class XMLFormatConfig implements FormatPluginConfig {
     XMLFormatConfig other = (XMLFormatConfig) obj;
     return Objects.equals(extensions, other.extensions)
         && Objects.equals(dataLevel, other.dataLevel)
-        && Objects.equals(allTextMode, other.allTextMode);
+        && Objects.equals(allTextMode, other.allTextMode)
+        && Objects.equals(useXSD, other.useXSD);
   }
 
   @Override
@@ -89,6 +100,7 @@ public class XMLFormatConfig implements FormatPluginConfig {
         .field("extensions", extensions)
         .field("dataLevel", dataLevel)
         .field("allTextMode", allTextMode)
+        .field("useXSD", useXSD)
       .toString();
   }
 }

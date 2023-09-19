@@ -49,11 +49,13 @@ public class XMLBatchReader implements ManagedReader {
     final XMLFormatPlugin plugin;
     final int dataLevel;
     final boolean allTextMode;
+    final boolean useXSD;
 
     XMLReaderConfig(XMLFormatPlugin plugin) {
       this.plugin = plugin;
       dataLevel = plugin.getConfig().dataLevel;
       allTextMode = plugin.getConfig().allTextMode();
+      useXSD = plugin.getConfig().useXSD();
     }
   }
 
@@ -63,7 +65,11 @@ public class XMLBatchReader implements ManagedReader {
     this.readerConfig = readerConfig;
     file = negotiator.file();
 
-    // Add schema if provided
+    // We need to set an order of precedence for schemata.
+    // The order implemented here is:
+    // 1.  Provided schema
+    // 2.  Schema from XSD
+    // 3.  Inferred schema from data
     if (negotiator.providedSchema() != null) {
       TupleMetadata schema = negotiator.providedSchema();
       negotiator.tableSchema(schema, false);
