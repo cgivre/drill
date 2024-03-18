@@ -156,6 +156,14 @@ public class CompliantTextBatchReader implements ManagedReader {
     return new FieldVarCharOutput(receiver);
   }
 
+  /**
+   * Builds a schema from the first few rows of a CSV file.
+   * @return A {@link TupleMetadata} of the schema of the data.
+   */
+  private TupleMetadata buildSchemaFromFirstRows() {
+    return null;
+  }
+
   private TupleMetadata buildSchemaFromHeaders(String[] fieldNames) {
     // Build table schema from headers
     TupleMetadata readerSchema = new TupleSchema();
@@ -314,7 +322,7 @@ public class CompliantTextBatchReader implements ManagedReader {
     final InputStream hStream = schemaNegotiator.file().open();
     final HeaderBuilder hOutput = new HeaderBuilder(split.getPath());
 
-    // we should read file header irrespective of split given given to this reader
+    // we should read file header irrespective of split given to this reader
     final TextInput hInput = new TextInput(settings, hStream, readBuffer, 0, split.getLength());
 
     final String [] fieldNames;
@@ -334,6 +342,23 @@ public class CompliantTextBatchReader implements ManagedReader {
     whitespaceBuffer.clear();
     return fieldNames;
   }
+
+  private void extractFirstRows(FileSchemaNegotiator schemaNegotiator, int rowCount) throws IOException {
+    assert settings.isHeaderExtractionEnabled();
+
+    // don't skip header in case skipFirstLine is set true
+    settings.setSkipFirstLine(false);
+
+    // Get the header row
+    String[] fieldNames = extractHeader(schemaNegotiator);
+
+    settings.setSkipFirstLine(true);
+
+    readBuffer.clear();
+    whitespaceBuffer.clear();
+
+  }
+
 
   /**
    * Generates the next record batch
