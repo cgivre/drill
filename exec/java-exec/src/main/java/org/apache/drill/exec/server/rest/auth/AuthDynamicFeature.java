@@ -19,6 +19,8 @@ package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Priority;
 import javax.annotation.security.PermitAll;
@@ -40,7 +42,7 @@ import java.net.URLEncoder;
  * page.
  */
 public class AuthDynamicFeature implements DynamicFeature {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuthDynamicFeature.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthDynamicFeature.class);
 
   @Override
   public void configure(final ResourceInfo resourceInfo, final FeatureContext configuration) {

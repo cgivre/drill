@@ -19,13 +19,13 @@ package org.apache.drill.exec.server.rest.auth;
 
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.security.Authenticator;
 
 public class SpnegoSecurityHandler extends DrillHttpConstraintSecurityHandler {
 
   @Override
   public String getImplName() {
-    return Constraint.__SPNEGO_AUTH;
+    return Authenticator.SPNEGO_AUTH;
   }
 
   @Override

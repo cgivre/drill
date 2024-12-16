@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server.rest.auth;
 
 
+import jakarta.servlet.ServletRequest;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -26,17 +27,18 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.SpnegoLoginService;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.SPNEGOLoginService;
+import org.eclipse.jetty.security.UserIdentity;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.Principal;
@@ -47,8 +49,8 @@ import java.util.Base64;
  * Custom implementation of DrillSpnegoLoginService to avoid the need of passing targetName in a config file,
  * to include the SPNEGO OID and the way UserIdentity is created.
  */
-public class DrillSpnegoLoginService extends SpnegoLoginService {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoLoginService.class);
+public class DrillSpnegoLoginService extends SPNEGOLoginService {
+  private static final Logger logger = LoggerFactory.getLogger(DrillSpnegoLoginService.class);
 
   private static final String TARGET_NAME_FIELD_NAME = "_targetName";
 
@@ -73,7 +75,7 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
   protected void doStart() throws Exception {
     // Override the parent implementation, setting _targetName to be the serverPrincipal
     // without the need for a one-line file to do the same thing.
-    final Field targetNameField = SpnegoLoginService.class.getDeclaredField(TARGET_NAME_FIELD_NAME);
+    final Field targetNameField = SPNEGOLoginService.class.getDeclaredField(TARGET_NAME_FIELD_NAME);
     targetNameField.setAccessible(true);
     targetNameField.set(this, spnegoConfig.getSpnegoPrincipal());
   }
@@ -135,9 +137,9 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
           subject.getPrincipals().add(user);
 
           if (isAdmin) {
-            return this._identityService.newUserIdentity(subject, user, DrillUserPrincipal.ADMIN_USER_ROLES);
+            return this.getIdentityService().newUserIdentity(subject, user, DrillUserPrincipal.ADMIN_USER_ROLES);
           } else {
-            return this._identityService.newUserIdentity(subject, user, DrillUserPrincipal.NON_ADMIN_USER_ROLES);
+            return this.getIdentityService().newUserIdentity(subject, user, DrillUserPrincipal.NON_ADMIN_USER_ROLES);
           }
         }
       }

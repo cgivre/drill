@@ -99,7 +99,7 @@
     <javax.el.version>3.0.0</javax.el.version>
     <javax.validation.api>2.0.1.Final</javax.validation.api>
     <jersey.version>2.40</jersey.version>
-    <jetty.version>9.4.56.v20240826</jetty.version>
+    <jetty.version>12.0.9</jetty.version>
     <jmockit.version>1.47</jmockit.version>
     <jna.version>5.13.0</jna.version>
     <joda.version>2.12.5</joda.version>
@@ -118,7 +118,7 @@
     <maven.min.version>3.6.3</maven.min.version>
     <maven.version>3.8.4</maven.version>
     <memoryMb>3072</memoryMb>
-    <metrics.version>4.2.19</metrics.version>
+    <metrics.version>4.2.29</metrics.version>
     <mockito.version>3.11.2</mockito.version>
     <mongo.version>4.11.1</mongo.version>
     <msgpack.version>0.6.6</msgpack.version>

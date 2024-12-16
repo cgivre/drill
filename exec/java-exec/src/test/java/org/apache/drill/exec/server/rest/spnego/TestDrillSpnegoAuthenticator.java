@@ -19,6 +19,11 @@ package org.apache.drill.exec.server.rest.spnego;
 
 import com.google.common.collect.Lists;
 import com.typesafe.config.ConfigValueFactory;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -35,12 +40,12 @@ import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
+import org.eclipse.jetty.ee9.nested.Authentication;
+import org.eclipse.jetty.ee9.security.Authenticator;
+import org.eclipse.jetty.ee9.security.UserAuthentication;
+import org.eclipse.jetty.ee9.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.UserAuthentication;
-import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.server.Authentication;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
@@ -53,9 +58,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 import javax.security.auth.Subject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
 
@@ -146,7 +148,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
 
     final Authentication authentication = spnegoAuthenticator.validateRequest(request, response, false);
 
-    assertEquals(authentication, Authentication.SEND_CONTINUE);
+    assertEquals(Authentication.SEND_CONTINUE, authentication);
     verify(response).sendError(401);
     verify(response).setHeader(HttpHeader.WWW_AUTHENTICATE.asString(), HttpHeader.NEGOTIATE.asString());
   }
@@ -201,7 +203,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
   /**
    * Test to verify that when request is sent for {@link WebServerConstants#LOGOUT_RESOURCE_PATH} then the UserIdentity
    * will be removed from the session and returned authentication will be null from
-   * {@link DrillSpnegoAuthenticator#validateRequest(javax.servlet.ServletRequest, javax.servlet.ServletResponse, boolean)}
+   * {@link DrillSpnegoAuthenticator#validateRequest(ServletRequest, ServletResponse, boolean)}
    */
   @Test
   @Ignore("See DRILL-5387")

@@ -18,7 +18,7 @@
 package org.apache.drill.exec.server.rest.auth;
 
 import com.google.common.collect.ImmutableList;
-import org.eclipse.jetty.security.AbstractLoginService.RolePrincipal;
+import org.eclipse.jetty.security.RolePrincipal;
 
 import java.security.Principal;
 import java.util.List;

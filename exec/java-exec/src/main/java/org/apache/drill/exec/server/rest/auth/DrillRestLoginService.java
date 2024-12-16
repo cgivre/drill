@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
+import jakarta.servlet.ServletRequest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.security.AuthenticatorFactory;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
@@ -28,18 +29,24 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
 import java.security.Principal;
+import java.util.function.Function;
+
+;
 
 /**
  * LoginService used when user authentication is enabled in Drillbit. It validates the user against the user
  * authenticator set in BOOT config.
  */
 public class DrillRestLoginService implements LoginService {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRestLoginService.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillRestLoginService.class);
 
   private final DrillbitContext drillbitContext;
 
@@ -60,6 +67,11 @@ public class DrillRestLoginService implements LoginService {
   @Override
   public String getName() {
     return "DrillRestLoginService";
+  }
+
+  @Override
+  public UserIdentity login(String username, Object credentials, Request request, Function<Boolean, Session> getOrCreateSession) {
+    return null;
   }
 
   @Override

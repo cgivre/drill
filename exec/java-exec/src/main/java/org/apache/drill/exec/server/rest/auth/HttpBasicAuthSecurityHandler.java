@@ -20,8 +20,8 @@ package org.apache.drill.exec.server.rest.auth;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.eclipse.jetty.security.authentication.BasicAuthenticator;
-import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.ee9.security.authentication.BasicAuthenticator;
+import org.eclipse.jetty.security.Authenticator;
 
 /**
  * Implement HTTP Basic authentication for REST API access
@@ -29,7 +29,7 @@ import org.eclipse.jetty.util.security.Constraint;
 public class HttpBasicAuthSecurityHandler extends DrillHttpConstraintSecurityHandler {
   @Override
   public String getImplName() {
-    return Constraint.__BASIC_AUTH;
+    return Authenticator.BASIC_AUTH;
   }
 
   @Override
@@ -39,5 +39,4 @@ public class HttpBasicAuthSecurityHandler extends DrillHttpConstraintSecurityHan
 
     setup(new BasicAuthenticator(), new DrillRestLoginService(dbContext));
   }
-
 }

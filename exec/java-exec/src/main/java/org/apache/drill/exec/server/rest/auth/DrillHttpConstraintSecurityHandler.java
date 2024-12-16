@@ -17,14 +17,13 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.exceptions.DrillException;
+import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee9.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee9.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 
 import java.util.Collections;
 import java.util.Set;
@@ -54,7 +53,7 @@ public abstract class DrillHttpConstraintSecurityHandler extends ConstraintSecur
 
   public void setup(LoginAuthenticator authenticator, LoginService loginService) {
     final Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
-    setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
+    setConstraintMappings(Collections.emptyList(), knownRoles);
     setAuthenticator(authenticator);
     setLoginService(loginService);
   }

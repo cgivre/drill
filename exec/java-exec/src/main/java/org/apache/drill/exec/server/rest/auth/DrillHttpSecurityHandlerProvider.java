@@ -17,8 +17,11 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
-import org.apache.drill.exec.server.rest.header.ResponseHeadersSettingFilter;
 import com.google.common.base.Preconditions;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.common.map.CaseInsensitiveMap;
@@ -28,19 +31,16 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.AuthStringUtil;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.WebServerConstants;
+import org.apache.drill.exec.server.rest.header.ResponseHeadersSettingFilter;
+import org.eclipse.jetty.ee9.nested.Handler;
+import org.eclipse.jetty.ee9.nested.Request;
+import org.eclipse.jetty.ee9.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee9.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.security.Authenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Collection;
@@ -124,7 +124,6 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
   @Override
   public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-
     Preconditions.checkState(securityHandlers.size() > 0);
     responseHeaders.forEach(response::setHeader);
     HttpSession session = request.getSession(true);
@@ -145,13 +144,13 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
       // 3) If both but uri doesn't equals spnegoLogin then use FORMSecurity
       // 4) If only FORMSecurity handler then use FORMSecurity
       if (isSpnegoEnabled() && (!isFormEnabled() || uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH))) {
-        securityHandler = securityHandlers.get(Constraint.__SPNEGO_AUTH);
+        securityHandler = securityHandlers.get(Authenticator.SPNEGO_AUTH);
         securityHandler.handle(target, baseRequest, request, response);
       } else if(isBasicEnabled() && request.getHeader(HttpHeader.AUTHORIZATION.asString()) != null) {
-        securityHandler = securityHandlers.get(Constraint.__BASIC_AUTH);
+        securityHandler = securityHandlers.get(Authenticator.BASIC_AUTH);
         securityHandler.handle(target, baseRequest, request, response);
       } else if (isFormEnabled()) {
-        securityHandler = securityHandlers.get(Constraint.__FORM_AUTH);
+        securityHandler = securityHandlers.get(Authenticator.FORM_AUTH);
         securityHandler.handle(target, baseRequest, request, response);
       }
 
@@ -181,15 +180,15 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
   }
 
   public boolean isSpnegoEnabled() {
-    return securityHandlers.containsKey(Constraint.__SPNEGO_AUTH);
+    return securityHandlers.containsKey(Authenticator.SPNEGO_AUTH);
   }
 
   public boolean isFormEnabled() {
-    return securityHandlers.containsKey(Constraint.__FORM_AUTH);
+    return securityHandlers.containsKey(Authenticator.FORM_AUTH);
   }
 
   public boolean isBasicEnabled() {
-    return securityHandlers.containsKey(Constraint.__BASIC_AUTH);
+    return securityHandlers.containsKey(Authenticator.BASIC_AUTH);
   }
 
   /**
@@ -208,7 +207,7 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
             AuthStringUtil.asSet(config.getStringList(ExecConstants.HTTP_AUTHENTICATION_MECHANISMS)));
       } else {
         // For backward compatibility
-        configuredMechs.add(Constraint.__FORM_AUTH);
+        configuredMechs.add(Authenticator.FORM_AUTH);
       }
     }
     return configuredMechs;

@@ -18,32 +18,36 @@
 package org.apache.drill.exec.server.rest.auth;
 
 
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.apache.parquet.Strings;
+import org.eclipse.jetty.ee9.nested.Authentication;
+import org.eclipse.jetty.ee9.nested.Request;
+import org.eclipse.jetty.ee9.security.UserAuthentication;
+import org.eclipse.jetty.ee9.security.authentication.ConfigurableSpnegoAuthenticator;
+import org.eclipse.jetty.ee9.security.ServerAuthException;
+import org.eclipse.jetty.ee9.security.authentication.DeferredAuthentication;
+import org.eclipse.jetty.ee9.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.ServerAuthException;
-import org.eclipse.jetty.security.UserAuthentication;
-import org.eclipse.jetty.security.authentication.DeferredAuthentication;
-import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.security.authentication.SpnegoAuthenticator;
-import org.eclipse.jetty.server.Authentication;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.UserIdentity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
+
+;
 
 /**
  * Custom SpnegoAuthenticator for Drill
  */
-public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
+public class DrillSpnegoAuthenticator extends ConfigurableSpnegoAuthenticator {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoAuthenticator.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillSpnegoAuthenticator.class);
 
   public DrillSpnegoAuthenticator(String authMethod) {
     super(authMethod);
@@ -51,7 +55,7 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
 
   /**
    * Updated logic as compared to default implementation in
-   * {@link SpnegoAuthenticator#validateRequest(ServletRequest, ServletResponse, boolean)} to handle below cases:
+   * {@link ConfigurableSpnegoAuthenticator#validateRequest(jakarta.servlet.ServletRequest, jakarta.servlet.ServletResponse, boolean)} to handle below cases:
    * 1) Perform SPNEGO authentication only when spnegoLogin resource is requested. This helps to avoid authentication
    *    for each and every resource which the JETTY provided authenticator does.
    * 2) Helps to redirect to the target URL after authentication is done successfully.
@@ -64,8 +68,7 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
    * @throws ServerAuthException
    */
   @Override
-  public Authentication validateRequest(ServletRequest request, ServletResponse response, boolean mandatoryAuth)
-      throws ServerAuthException {
+    public Authentication validateRequest(ServletRequest request, ServletResponse response, boolean mandatoryAuth) throws ServerAuthException {
 
     final HttpServletRequest req = (HttpServletRequest) request;
     final HttpSession session = req.getSession(true);
@@ -94,7 +97,6 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
    * Method to authenticate a user session using the SPNEGO token passed in AUTHORIZATION header of request.
    * @param request
    * @param response
-   * @param mandatory
    * @return
    * @throws ServerAuthException
    */
@@ -126,7 +128,7 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
         }
       } catch (IOException e) {
         logger.error("DrillSpnegoAuthenticator: Failed while sending challenge to client {}", req.getRemoteAddr(), e);
-        throw new ServerAuthException(e);
+        throw new RuntimeException("Authentication error", e);
       }
     }
 
