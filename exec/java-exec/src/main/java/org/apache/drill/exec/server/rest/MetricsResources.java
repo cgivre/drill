@@ -17,17 +17,17 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
-
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.SecurityContext;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.glassfish.jersey.server.mvc.Viewable;
+
+import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 
 @Path("/metrics")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
@@ -35,7 +35,8 @@ public class MetricsResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetricsResources.class);
 
   @Inject UserAuthEnabled authEnabled;
-  @Inject SecurityContext sc;
+  @Inject
+  SecurityContext sc;
 
   @GET
   @Produces(MediaType.TEXT_HTML)

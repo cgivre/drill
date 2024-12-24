@@ -17,35 +17,35 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import com.google.common.annotations.VisibleForTesting;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.work.WorkManager;
-import com.google.common.annotations.VisibleForTesting;
+import org.eclipse.jetty.ee9.security.authentication.SessionAuthentication;
+import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
-import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.util.security.Constraint;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.Set;
@@ -168,11 +168,11 @@ public class LogInLogOutResources {
     }
 
     public boolean isSpnegoEnabled() {
-      return authEnabled && configuredMechs.contains(Constraint.__SPNEGO_AUTH);
+      return authEnabled && configuredMechs.contains(Authenticator.SPNEGO_AUTH);
     }
 
     public boolean isFormEnabled() {
-      return authEnabled && configuredMechs.contains(Constraint.__FORM_AUTH);
+      return authEnabled && configuredMechs.contains(Authenticator.FORM_AUTH);
     }
 
     public String getError() {

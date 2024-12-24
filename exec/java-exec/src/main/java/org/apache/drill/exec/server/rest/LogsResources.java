@@ -21,6 +21,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.work.WorkManager;
@@ -33,16 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
@@ -61,7 +60,8 @@ public class LogsResources {
   private static final Logger logger = LoggerFactory.getLogger(LogsResources.class);
 
   @Inject DrillRestServer.UserAuthEnabled authEnabled;
-  @Inject SecurityContext sc;
+  @Inject
+  SecurityContext sc;
   @Inject WorkManager work;
 
   private static final FileFilter file_filter = new FileFilter() {

@@ -21,9 +21,9 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.eclipse.jetty.ee9.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee9.security.authentication.LoginAuthenticator;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 
 import java.util.Collections;
 import java.util.Set;

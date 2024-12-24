@@ -32,12 +32,12 @@ import org.apache.drill.exec.rpc.security.AuthStringUtil;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.apache.drill.exec.server.rest.header.ResponseHeadersSettingFilter;
-import org.eclipse.jetty.ee9.nested.Handler;
-import org.eclipse.jetty.ee9.nested.Request;
-import org.eclipse.jetty.ee9.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee9.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.authentication.SessionAuthentication;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

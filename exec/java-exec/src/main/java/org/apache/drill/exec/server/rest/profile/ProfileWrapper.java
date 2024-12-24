@@ -17,17 +17,9 @@
  */
 package org.apache.drill.exec.server.rest.profile;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.CaseFormat;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.JacksonUtils;
@@ -42,11 +34,19 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.server.rest.WebUtils;
-import com.google.common.base.CaseFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
@@ -54,7 +54,7 @@ import javax.servlet.http.HttpServletRequest;
 public class ProfileWrapper {
   private static final String ESTIMATED_LABEL = " (Estimated)";
   private static final String NOT_AVAILABLE_LABEL = "Not Available";
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(ProfileWrapper.class);
   private static final ObjectMapper mapper = JacksonUtils.createObjectMapper().enable(INDENT_OUTPUT);
 
   private final QueryProfile profile;

@@ -19,7 +19,7 @@ package org.apache.drill.exec.server.rest.auth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.drill.exec.server.rest.WebServerConstants;
-import org.eclipse.jetty.ee9.nested.ErrorHandler;
+import org.eclipse.jetty.server.handler.ErrorHandler;
 
 import java.io.IOException;
 import java.io.Writer;

@@ -20,8 +20,8 @@ package org.apache.drill.exec.server.rest.auth;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.eclipse.jetty.ee9.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 
 /**
  * Implement HTTP Basic authentication for REST API access

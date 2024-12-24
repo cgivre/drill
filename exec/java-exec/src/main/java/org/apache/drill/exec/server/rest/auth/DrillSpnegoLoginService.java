@@ -27,8 +27,8 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.SPNEGOLoginService;
-import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.ConfigurableSpnegoLoginService;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -45,11 +45,13 @@ import java.security.Principal;
 import java.security.PrivilegedExceptionAction;
 import java.util.Base64;
 
+;
+
 /**
  * Custom implementation of DrillSpnegoLoginService to avoid the need of passing targetName in a config file,
  * to include the SPNEGO OID and the way UserIdentity is created.
  */
-public class DrillSpnegoLoginService extends SPNEGOLoginService {
+public class DrillSpnegoLoginService extends ConfigurableSpnegoLoginService {
   private static final Logger logger = LoggerFactory.getLogger(DrillSpnegoLoginService.class);
 
   private static final String TARGET_NAME_FIELD_NAME = "_targetName";
@@ -75,7 +77,7 @@ public class DrillSpnegoLoginService extends SPNEGOLoginService {
   protected void doStart() throws Exception {
     // Override the parent implementation, setting _targetName to be the serverPrincipal
     // without the need for a one-line file to do the same thing.
-    final Field targetNameField = SPNEGOLoginService.class.getDeclaredField(TARGET_NAME_FIELD_NAME);
+    final Field targetNameField = ConfigurableSpnegoLoginService.class.getDeclaredField(TARGET_NAME_FIELD_NAME);
     targetNameField.setAccessible(true);
     targetNameField.set(this, spnegoConfig.getSpnegoPrincipal());
   }

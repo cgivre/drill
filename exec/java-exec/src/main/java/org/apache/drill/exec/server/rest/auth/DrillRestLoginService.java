@@ -29,9 +29,8 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.UserIdentity;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Session;
+import org.eclipse.jetty.server.UserIdentity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +38,7 @@ import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.function.Function;
 
+;
 ;
 
 /**

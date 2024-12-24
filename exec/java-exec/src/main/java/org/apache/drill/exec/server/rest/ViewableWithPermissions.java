@@ -18,11 +18,11 @@
 package org.apache.drill.exec.server.rest;
 
 import com.google.common.collect.ImmutableMap;
+import jakarta.ws.rs.core.SecurityContext;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.glassfish.jersey.server.mvc.Viewable;
 
-import javax.ws.rs.core.SecurityContext;
 import java.util.Map;
 
 /**
