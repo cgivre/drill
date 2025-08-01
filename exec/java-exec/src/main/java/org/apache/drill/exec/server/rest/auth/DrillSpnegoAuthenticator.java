@@ -26,24 +26,27 @@ import org.eclipse.jetty.security.ServerAuthException;
 import org.eclipse.jetty.security.UserAuthentication;
 import org.eclipse.jetty.security.authentication.DeferredAuthentication;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
-import org.eclipse.jetty.security.authentication.SpnegoAuthenticator;
+import org.eclipse.jetty.security.authentication.SPNEGOAuthenticator;
 import org.eclipse.jetty.server.Authentication;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.UserIdentity;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 /**
  * Custom SpnegoAuthenticator for Drill
  */
-public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
+public class DrillSpnegoAuthenticator extends SPNEGOAuthenticator {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoAuthenticator.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillSpnegoAuthenticator.class);
 
   public DrillSpnegoAuthenticator(String authMethod) {
     super(authMethod);

@@ -29,17 +29,19 @@ import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
 import java.security.Principal;
 
-/**
+/**d
  * LoginService used when user authentication is enabled in Drillbit. It validates the user against the user
  * authenticator set in BOOT config.
  */
 public class DrillRestLoginService implements LoginService {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRestLoginService.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillRestLoginService.class);
 
   private final DrillbitContext drillbitContext;
 

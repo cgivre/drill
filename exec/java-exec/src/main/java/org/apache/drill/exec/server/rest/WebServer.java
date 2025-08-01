@@ -21,6 +21,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
 
+import jakarta.servlet.Servlet;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -66,10 +67,10 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -194,13 +195,13 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.setErrorHandler(errorHandler);
     servletContextHandler.setContextPath("/");
 
-    final ServletHolder servletHolder = new ServletHolder(new ServletContainer(
+    final ServletHolder servletHolder = new ServletHolder((Servlet) new ServletContainer(
         new DrillRestServer(workManager, servletContextHandler.getServletContext(), drillbit)));
     servletHolder.setInitOrder(1);
     servletContextHandler.addServlet(servletHolder, "/*");
 
-    servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metrics)), STATUS_METRICS_PATH);
-    servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), STATUS_THREADS_PATH);
+    servletContextHandler.addServlet(new ServletHolder((Servlet) new MetricsServlet(metrics)), STATUS_METRICS_PATH);
+    servletContextHandler.addServlet(new ServletHolder((Servlet) new ThreadDumpServlet()), STATUS_THREADS_PATH);
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
 

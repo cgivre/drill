@@ -46,7 +46,9 @@ import com.google.common.base.CaseFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
@@ -54,7 +56,7 @@ import javax.servlet.http.HttpServletRequest;
 public class ProfileWrapper {
   private static final String ESTIMATED_LABEL = " (Estimated)";
   private static final String NOT_AVAILABLE_LABEL = "Not Available";
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileWrapper.class);
+  private static final Logger logger = LoggerFactory.getLogger(ProfileWrapper.class);
   private static final ObjectMapper mapper = JacksonUtils.createObjectMapper().enable(INDENT_OUTPUT);
 
   private final QueryProfile profile;

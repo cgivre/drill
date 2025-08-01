@@ -26,7 +26,9 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.SpnegoLoginService;
+
+import org.eclipse.jetty.security.IdentityService;
+import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
@@ -36,7 +38,10 @@ import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.Principal;
@@ -47,8 +52,8 @@ import java.util.Base64;
  * Custom implementation of DrillSpnegoLoginService to avoid the need of passing targetName in a config file,
  * to include the SPNEGO OID and the way UserIdentity is created.
  */
-public class DrillSpnegoLoginService extends SpnegoLoginService {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSpnegoLoginService.class);
+public class DrillSpnegoLoginService implements LoginService {
+  private static final Logger logger = LoggerFactory.getLogger(DrillSpnegoLoginService.class);
 
   private static final String TARGET_NAME_FIELD_NAME = "_targetName";
 
@@ -58,9 +63,10 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
 
   private final UserGroupInformation loggedInUgi;
 
+  private IdentityService identityService;
+
   public DrillSpnegoLoginService(DrillbitContext drillBitContext) throws DrillException {
-    super(DrillSpnegoLoginService.class.getName());
-    setIdentityService(new DefaultIdentityService());
+    identityService = new DefaultIdentityService();
     drillContext = drillBitContext;
 
     // Load and verify SPNEGO config. Then Login using creds to get an UGI instance
@@ -69,7 +75,6 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
     loggedInUgi = spnegoConfig.getLoggedInUgi();
   }
 
-  @Override
   protected void doStart() throws Exception {
     // Override the parent implementation, setting _targetName to be the serverPrincipal
     // without the need for a one-line file to do the same thing.
@@ -79,16 +84,40 @@ public class DrillSpnegoLoginService extends SpnegoLoginService {
   }
 
   @Override
-  public UserIdentity login(final String username, final Object credentials, ServletRequest request) {
+  public String getName() {
+    return loggedInUgi.getUserName();
+  }
 
+  @Override
+  public UserIdentity login(final String username, final Object credentials, ServletRequest request) {
     UserIdentity identity = null;
     try {
       identity = loggedInUgi.doAs((PrivilegedExceptionAction<UserIdentity>) () -> spnegoLogin(credentials, request));
     } catch (Exception e) {
       logger.error("Failed to login using SPNEGO", e);
     }
-
     return identity;
+  }
+
+  @Override
+  public boolean validate(UserIdentity userIdentity) {
+    return userIdentity != null && userIdentity.getUserPrincipal() != null;
+  }
+
+  @Override
+  public IdentityService getIdentityService() {
+    return this.identityService;
+  }
+
+  @Override
+  public void setIdentityService(IdentityService identityService) {
+    this.identityService = identityService;
+  }
+
+  @Override
+  public void logout(UserIdentity userIdentity) {
+    // Nothing required for logout
+    return;
   }
 
   private UserIdentity spnegoLogin(Object credentials, ServletRequest request) {
