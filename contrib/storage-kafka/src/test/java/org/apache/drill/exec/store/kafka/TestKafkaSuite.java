@@ -17,11 +17,8 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
-import kafka.zk.KafkaZkClient;
 import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.store.kafka.cluster.EmbeddedKafkaCluster;
 import org.apache.drill.exec.store.kafka.decoders.MessageReaderFactoryTest;
 import org.apache.drill.test.BaseTest;
@@ -30,19 +27,15 @@ import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.TopicConfig;
-import org.apache.kafka.common.security.JaasUtils;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.common.utils.Time;
-import org.apache.zookeeper.client.ZKClientConfig;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Option;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,26 +50,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TestKafkaSuite extends BaseTest {
 
   private static final Logger logger = LoggerFactory.getLogger(TestKafkaSuite.class);
-
   private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.jaasconf";
-
   public static EmbeddedKafkaCluster embeddedKafkaCluster;
-
-  private static KafkaZkClient zkClient;
-
   private static final AtomicInteger initCount = new AtomicInteger(0);
-
   static final int NUM_JSON_MSG = 10;
-
   private static final int CONN_TIMEOUT = 8 * 1000;
-
   private static final int SESSION_TIMEOUT = 10 * 1000;
-
   private static volatile boolean runningSuite = true;
 
   @BeforeClass
   public static void initKafka() throws Exception {
-    synchronized (TestKafkaSuite.class) {
+    embeddedKafkaCluster = new EmbeddedKafkaCluster();
+    createTopic(TestQueryConstants.JSON_TOPIC, 1, (short) 1);
+    createTopic(TestQueryConstants.AVRO_TOPIC, 1, (short) 1);
+
+    /*synchronized (TestKafkaSuite.class) {
       if (initCount.get() == 0) {
         ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
         System.setProperty(JaasUtils.JAVA_LOGIN_CONFIG_PARAM, ClassLoader.getSystemResource(LOGIN_CONF_RESOURCE_PATHNAME).getFile());
@@ -94,9 +82,23 @@ public class TestKafkaSuite extends BaseTest {
       }
       initCount.incrementAndGet();
       runningSuite = true;
-    }
+    }*/
     logger.info("Initialized Embedded Zookeeper and Kafka");
   }
+
+  private static void createTopic(String topic, int partitions, short replication) throws ExecutionException, InterruptedException {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", embeddedKafkaCluster.getKafkaBootstrapServers());
+        try (AdminClient adminClient = AdminClient.create(props)) {
+            NewTopic newTopic = new NewTopic(topic, partitions, replication);
+            Map<String, String> topicConfigs = new HashMap<>();
+            topicConfigs.put("retention.ms", "-1");
+            newTopic.configs(topicConfigs);
+            CreateTopicsResult result = adminClient.createTopics(Collections.singleton(newTopic));
+            result.all().get();
+        }
+    }
+
 
   public static boolean isRunningSuite() {
     return runningSuite;
@@ -105,16 +107,7 @@ public class TestKafkaSuite extends BaseTest {
   @AfterClass
   public static void tearDownCluster() {
     synchronized (TestKafkaSuite.class) {
-      if (initCount.decrementAndGet() == 0) {
-        if (zkClient != null) {
-          zkClient.close();
-          zkClient = null;
-        }
-        if (embeddedKafkaCluster != null && !embeddedKafkaCluster.getBrokers().isEmpty()) {
-          embeddedKafkaCluster.shutDownCluster();
-          embeddedKafkaCluster = null;
-        }
-      }
+      embeddedKafkaCluster.shutDownCluster();
     }
   }
 

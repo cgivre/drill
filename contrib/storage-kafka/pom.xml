@@ -31,7 +31,7 @@
   <name>Drill : Contrib : Storage : Kafka</name>
 
   <properties>
-    <kafka.version>2.8.2</kafka.version>
+    <kafka.version>4.0.0</kafka.version>
     <kafka.TestSuite>**/TestKafkaSuite.class</kafka.TestSuite>
   </properties>
 
@@ -97,7 +97,7 @@
     <dependency>
       <groupId>io.confluent</groupId>
       <artifactId>kafka-avro-serializer</artifactId>
-      <version>7.9.0</version>
+      <version>8.0.0</version>
     </dependency>
 
     <!-- Test dependencies -->
@@ -119,6 +119,19 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>kafka</artifactId>
+      <version>1.21.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>1.19.7</version>
+        <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
