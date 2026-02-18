@@ -274,11 +274,163 @@ public class SharePointFileSystem extends OAuthEnabledFileSystem {
   }
 
   private byte[] fetchSharePointListAsJson(String pathStr) throws IOException {
-    // This is a simplified implementation for list fetching
-    // In a full implementation, this would fetch list items from SharePoint Lists API
-    // For now, return an empty JSON array
-    logger.warn("SharePoint List functionality is not fully implemented");
-    return "[]".getBytes(StandardCharsets.UTF_8);
+    try {
+      // Parse path like "/sites/MySite/lists/MyList"
+      String[] parts = pathStr.split("/");
+      if (parts.length < 5 || !"sites".equals(parts[1]) || !"lists".equals(parts[3])) {
+        throw new IOException("Invalid SharePoint list path: " + pathStr);
+      }
+
+      String siteName = parts[2];
+      String listName = parts[4];
+
+      String siteId = resolveSiteNameToId(siteName);
+
+      // Get list by display name - search through lists
+      String listsUrl = GRAPH_API_URL + "/sites/" + siteId + "/lists?$search=\"" + listName + "\"";
+      JsonNode listsResponse = makeGraphApiRequest(listsUrl);
+
+      String listId = null;
+      if (listsResponse.has("value")) {
+        for (JsonNode list : listsResponse.get("value")) {
+          if (listName.equals(list.get("displayName").asText())) {
+            listId = list.get("id").asText();
+            break;
+          }
+        }
+      }
+
+      if (listId == null) {
+        throw new IOException("SharePoint list not found: " + listName);
+      }
+
+      // Get all list items
+      String itemsUrl = GRAPH_API_URL + "/sites/" + siteId + "/lists/" + listId + "/items?$expand=fields";
+      JsonNode itemsResponse = makeGraphApiRequest(itemsUrl);
+
+      // Serialize items to JSON
+      List<Map<String, Object>> itemsData = new ArrayList<>();
+      if (itemsResponse.has("value")) {
+        for (JsonNode item : itemsResponse.get("value")) {
+          Map<String, Object> itemMap = new HashMap<>();
+          itemMap.put("id", item.get("id").asText());
+          if (item.has("fields")) {
+            // Convert fields to map for JSON serialization
+            JsonNode fields = item.get("fields");
+            Map<String, Object> fieldsMap = objectMapper.convertValue(fields,
+              com.fasterxml.jackson.databind.type.TypeFactory.defaultInstance()
+                .constructMapType(HashMap.class, String.class, Object.class));
+            itemMap.put("fields", fieldsMap);
+          }
+          itemsData.add(itemMap);
+        }
+      }
+
+      return objectMapper.writeValueAsBytes(itemsData);
+    } catch (IOException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new IOException("Error fetching SharePoint list as JSON: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Resolve a SharePoint site name to its site ID.
+   * Supports:
+   * - Display name (e.g., "Sales Team")
+   * - Site ID with tenant (e.g., "tenantId,siteId")
+   * - URL-encoded site name (e.g., "Sales%20Team")
+   */
+  private String resolveSiteNameToId(String siteName) throws IOException {
+    if (siteNameToIdCache.containsKey(siteName)) {
+      return siteNameToIdCache.get(siteName);
+    }
+
+    try {
+      // Check if already a site ID (contains comma for tenantId,siteId format)
+      if (siteName.contains(",")) {
+        logger.debug("Using site ID directly: {}", siteName);
+        return siteName;
+      }
+
+      // Try search by display name
+      String searchUrl = GRAPH_API_URL + "/sites?search=" +
+        java.net.URLEncoder.encode(siteName, "UTF-8");
+      JsonNode response = makeGraphApiRequest(searchUrl);
+
+      if (response.has("value") && response.get("value").size() > 0) {
+        JsonNode firstSite = response.get("value").get(0);
+        if (firstSite.has("id")) {
+          String siteId = firstSite.get("id").asText();
+          siteNameToIdCache.put(siteName, siteId);
+          logger.info("Resolved site '{}' to ID: {}", siteName, siteId);
+          return siteId;
+        }
+      }
+
+      // If search fails, try direct URL-based lookup
+      String urlBasedSiteId = resolveSiteByUrl(siteName);
+      if (urlBasedSiteId != null) {
+        siteNameToIdCache.put(siteName, urlBasedSiteId);
+        return urlBasedSiteId;
+      }
+
+      throw new IOException("SharePoint site not found: " + siteName);
+    } catch (IOException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new IOException("Error resolving site name '" + siteName + "': " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Try to resolve a site by direct URL pattern.
+   * Handles URL-encoded names like "Sales%20Team"
+   */
+  private String resolveSiteByUrl(String siteName) throws IOException {
+    try {
+      // Try direct /sites/{name} endpoint
+      String siteUrl = GRAPH_API_URL + "/sites/" + siteName;
+      JsonNode site = makeGraphApiRequest(siteUrl);
+
+      if (site.has("id")) {
+        String siteId = site.get("id").asText();
+        logger.debug("Resolved site by direct URL: {} -> {}", siteName, siteId);
+        return siteId;
+      }
+    } catch (IOException e) {
+      logger.debug("Site not found by direct URL '{}'", siteName);
+    }
+
+    return null;
+  }
+
+  /**
+   * List available SharePoint sites (for discovery).
+   * This can be used to browse available sites.
+   */
+  private List<Map<String, String>> listSharePointSites() throws IOException {
+    List<Map<String, String>> sites = new ArrayList<>();
+    try {
+      String sitesUrl = GRAPH_API_URL + "/sites?$top=200";
+      JsonNode response = makeGraphApiRequest(sitesUrl);
+
+      if (response.has("value")) {
+        for (JsonNode site : response.get("value")) {
+          Map<String, String> siteInfo = new HashMap<>();
+          siteInfo.put("displayName", site.get("displayName").asText());
+          siteInfo.put("id", site.get("id").asText());
+          if (site.has("webUrl")) {
+            siteInfo.put("webUrl", site.get("webUrl").asText());
+          }
+          sites.add(siteInfo);
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Error listing SharePoint sites: {}", e.getMessage());
+    }
+
+    return sites;
   }
 
   private FileStatus jsonNodeToFileStatus(JsonNode item, String basePath) {
