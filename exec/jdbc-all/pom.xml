@@ -310,34 +310,6 @@
           <groupId>org.apache.kerby</groupId>
           <artifactId>*</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>com.microsoft.graph</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.microsoft.azure</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.microsoft.kiota</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.azure</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.opentelemetry</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.projectreactor</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.nimbusds</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -881,6 +853,19 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>include-sharepoint</id>
+      <activation>
+        <property>
+          <name>include.sharepoint</name>
+        </property>
+      </activation>
+      <properties>
+        <!-- Increase size limit when building with SharePoint connector -->
+        <jdbc-all-jar.maxsize>190000000</jdbc-all-jar.maxsize>
+      </properties>
+    </profile>
+
     <profile>
       <id>apache-release</id>
       <build>
