@@ -310,6 +310,34 @@
           <groupId>org.apache.kerby</groupId>
           <artifactId>*</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.microsoft.graph</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.microsoft.azure</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.microsoft.kiota</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.azure</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.projectreactor</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.nimbusds</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -435,7 +463,10 @@
               <!-- Please keep this list sorted. -->
               <exclude>antlr:*</exclude>
               <exclude>com.beust:*</exclude>
+              <exclude>com.box:*</exclude>
               <exclude>com.dropbox.*</exclude>
+              <exclude>com.microsoft.*</exclude>
+              <exclude>com.azure:*</exclude>
               <exclude>com.github.stefanbirkner</exclude>
               <exclude>com.google.code.findbugs:jsr305:*</exclude>
               <exclude>com.googlecode.json-simple:*</exclude>
