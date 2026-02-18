@@ -421,4 +421,4 @@ For issues related to:
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) file for details.
+Licensed under the Apache License, Version 2.0. See [LICENSE](../../LICENSE) file for details.
