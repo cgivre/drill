@@ -126,6 +126,16 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>com.microsoft.graph</groupId>
+      <artifactId>microsoft-graph</artifactId>
+      <version>6.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.azure</groupId>
+      <artifactId>msal4j</artifactId>
+      <version>1.17.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.drill.contrib.data</groupId>
       <artifactId>tpch-sample-data</artifactId>
       <version>${project.version}</version>

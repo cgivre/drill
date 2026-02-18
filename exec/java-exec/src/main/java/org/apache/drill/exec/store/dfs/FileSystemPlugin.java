@@ -109,6 +109,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       fsConf.set("fs.dropbox.impl", DropboxFileSystem.class.getName());
       fsConf.set("fs.sftp.impl", SFTPFileSystem.class.getName());
       fsConf.set("fs.box.impl", BoxFileSystem.class.getName());
+      fsConf.set("fs.sharepoint.impl", SharePointFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
       CredentialsProvider credentialsProvider = config.getCredentialsProvider();
       if (credentialsProvider != null) {
