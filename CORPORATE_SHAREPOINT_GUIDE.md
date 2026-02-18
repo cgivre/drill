@@ -418,6 +418,49 @@ CREATE TABLE hive.default.sharepoint_sales AS
 SELECT * FROM sharepoint.`/sites/Sales/drive/data.csv`;
 ```
 
+## JDBC Driver Considerations
+
+### JDBC Driver Size Constraint
+
+The Apache Drill JDBC driver (`drill-jdbc-all`) has a size limit of 62MB to minimize dependencies for JDBC users. Adding the SharePoint connector dependencies increases the total dependency footprint.
+
+**If you're using the JDBC driver distribution:**
+
+The SharePoint connector requires:
+- `com.microsoft.graph:microsoft-graph` (2.5MB+)
+- `com.microsoft.azure:msal4j` (1MB+)
+- Transitive dependencies (azure-core, kiota, jackson, reactor-core, etc.)
+
+**Total addition: ~30MB+**
+
+This may exceed your deployment constraints.
+
+**Solutions:**
+
+1. **Use Drill Server Distribution (Recommended)**
+   - Download the full Drill server from [Apache Drill downloads](https://drill.apache.org/download/)
+   - No size constraints - includes all storage plugins
+   - Best for enterprise deployments
+
+2. **Build Custom JDBC with Larger Size Limit**
+   ```bash
+   # Edit exec/jdbc-all/pom.xml
+   # Change: <jdbc-all-jar.maxsize>62000000</jdbc-all-jar.maxsize>
+   # To: <jdbc-all-jar.maxsize>150000000</jdbc-all-jar.maxsize>
+
+   mvn clean package -pl exec/jdbc-all
+   ```
+
+3. **Exclude SharePoint from JDBC JAR**
+   - Build Drill server normally (no SharePoint needed in JDBC driver)
+   - Use server with embedded drivers for SharePoint queries
+   - Use JDBC driver separately for non-SharePoint scenarios
+
+4. **Use Drill Embedded**
+   - Embed Drill directly in your application
+   - No JDBC JAR size limits
+   - Direct access to all plugins including SharePoint
+
 ## Support and Resources
 
 - [Microsoft Graph API Docs](https://docs.microsoft.com/en-us/graph/overview)
