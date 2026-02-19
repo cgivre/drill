@@ -33,7 +33,9 @@
        "package.namespace.prefix" equals to "oadd.". It can be overridden if necessary within any profile -->
   <properties>
     <package.namespace.prefix>oadd.</package.namespace.prefix>
-    <jdbc-all-jar.maxsize>62000000</jdbc-all-jar.maxsize>
+    <!-- Updated to 190MB to reflect current Drill dependencies.
+         Note: Optional dependencies (e.g., SharePoint connector) are not included by default. -->
+    <jdbc-all-jar.maxsize>190000000</jdbc-all-jar.maxsize>
   </properties>
 
   <dependencies>
@@ -853,19 +855,6 @@
   </build>
 
   <profiles>
-    <profile>
-      <id>include-sharepoint</id>
-      <activation>
-        <property>
-          <name>include.sharepoint</name>
-        </property>
-      </activation>
-      <properties>
-        <!-- Increase size limit when building with SharePoint connector -->
-        <jdbc-all-jar.maxsize>190000000</jdbc-all-jar.maxsize>
-      </properties>
-    </profile>
-
     <profile>
       <id>apache-release</id>
       <build>
